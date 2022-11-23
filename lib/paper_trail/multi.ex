@@ -43,6 +43,7 @@ defmodule PaperTrail.Multi do
   def insert(%Ecto.Multi{} = multi, changeset, options \\ []) do
     model_key = get_model_key(options)
     version_key = get_version_key(options)
+    repo_options = Keyword.get(options, :repo_options, [])
 
     case RepoClient.strict_mode(options) do
       true ->
@@ -69,7 +70,7 @@ defmodule PaperTrail.Multi do
               current_version_id: initial_version.id
             })
 
-          repo.insert(updated_changeset)
+          repo.insert(updated_changeset, repo_options)
         end)
         |> Ecto.Multi.run(version_key, fn repo,
                                           %{
@@ -84,7 +85,7 @@ defmodule PaperTrail.Multi do
 
       _ ->
         multi
-        |> Ecto.Multi.insert(model_key, changeset)
+        |> Ecto.Multi.insert(model_key, changeset, repo_options)
         |> Ecto.Multi.run(version_key, fn repo, %{^model_key => model} ->
           version = make_version_struct(%{event: "insert"}, model, options)
           repo.insert(version)
@@ -100,6 +101,7 @@ defmodule PaperTrail.Multi do
       ) do
     model_key = get_model_key(options)
     version_key = get_version_key(options)
+    repo_options = Keyword.get(options, :repo_options, [])
 
     case RepoClient.strict_mode(options) do
       true ->
@@ -117,7 +119,7 @@ defmodule PaperTrail.Multi do
         end)
         |> Ecto.Multi.run(model_key, fn repo, %{initial_version: initial_version} ->
           updated_changeset = changeset |> change(%{current_version_id: initial_version.id})
-          repo.update(updated_changeset)
+          repo.update(updated_changeset, repo_options)
         end)
         |> Ecto.Multi.run(version_key, fn repo, %{initial_version: initial_version} ->
           new_item_changes =
@@ -131,7 +133,7 @@ defmodule PaperTrail.Multi do
 
       _ ->
         multi
-        |> Ecto.Multi.update(model_key, changeset)
+        |> Ecto.Multi.update(model_key, changeset, repo_options)
         |> Ecto.Multi.run(version_key, fn repo, _changes ->
           version = make_version_struct(%{event: "update"}, changeset, options)
 
@@ -155,6 +157,7 @@ defmodule PaperTrail.Multi do
     version_key = get_version_key(options)
     entries = make_version_structs(%{event: "update"}, queryable, changes, options)
     returning = !!options[:returning] && RepoClient.return_operation(options) == version_key
+    repo_options = Keyword.get(options, :repo_options, [])
 
     case RepoClient.strict_mode(options) do
       true ->
@@ -162,7 +165,7 @@ defmodule PaperTrail.Multi do
 
       _ ->
         multi
-        |> Ecto.Multi.update_all(model_key, queryable, updates)
+        |> Ecto.Multi.update_all(model_key, queryable, updates, repo_options)
         |> Ecto.Multi.insert_all(version_key, Version, entries, returning: returning)
     end
   end
@@ -175,9 +178,10 @@ defmodule PaperTrail.Multi do
       ) do
     model_key = get_model_key(options)
     version_key = get_version_key(options)
+    repo_options = Keyword.get(options, :repo_options, [])
 
     multi
-    |> Ecto.Multi.delete(model_key, struct_or_changeset, options)
+    |> Ecto.Multi.delete(model_key, struct_or_changeset, repo_options)
     |> Ecto.Multi.run(version_key, fn repo, %{} ->
       version = make_version_struct(%{event: "delete"}, struct_or_changeset, options)
       repo.insert(version, options)
