@@ -30,7 +30,8 @@ defmodule PaperTrail do
               model_key: multi_name,
               version_key: multi_name,
               return_operation: multi_name,
-              returning: boolean()
+              returning: boolean(),
+              repo_options: Keyword.t()
             ]
 
   @type result :: {:ok, Ecto.Schema.t()} | {:error, Changeset.t()}
@@ -186,6 +187,7 @@ defmodule PaperTrail do
   @spec insert!(Ecto.Schema.t(), options) :: Ecto.Schema.t()
   def insert!(changeset, options \\ []) do
     repo = RepoClient.repo(options)
+    repo_options = Keyword.get(options, :repo_options, [])
 
     repo.transaction(fn ->
       case RepoClient.strict_mode(options) do
@@ -211,7 +213,7 @@ defmodule PaperTrail do
               current_version_id: initial_version.id
             })
 
-          model = repo.insert!(updated_changeset)
+          model = repo.insert!(updated_changeset, repo_options)
 
           target_version =
             make_version_struct(%{event: "insert"}, model, options) |> serialize(options)
@@ -220,7 +222,7 @@ defmodule PaperTrail do
           model
 
         _ ->
-          model = repo.insert!(changeset)
+          model = repo.insert!(changeset, repo_options)
           make_version_struct(%{event: "insert"}, model, options) |> repo.insert!
           model
       end
@@ -244,6 +246,7 @@ defmodule PaperTrail do
   @spec update!(Ecto.Schema.t(), options) :: Ecto.Schema.t()
   def update!(changeset, options \\ []) do
     repo = RepoClient.repo(options)
+    repo_options = Keyword.get(options, :repo_options, [])
 
     repo.transaction(fn ->
       case RepoClient.strict_mode(options) do
@@ -258,7 +261,7 @@ defmodule PaperTrail do
           target_version = make_version_struct(%{event: "update"}, target_changeset, options)
           initial_version = repo.insert!(target_version)
           updated_changeset = changeset |> change(%{current_version_id: initial_version.id})
-          model = repo.update!(updated_changeset)
+          model = repo.update!(updated_changeset, repo_options)
 
           new_item_changes =
             initial_version.item_changes
@@ -270,7 +273,7 @@ defmodule PaperTrail do
           model
 
         _ ->
-          model = repo.update!(changeset)
+          model = repo.update!(changeset, repo_options)
           version_struct = make_version_struct(%{event: "update"}, changeset, options)
           repo.insert!(version_struct)
           model
@@ -306,9 +309,10 @@ defmodule PaperTrail do
   @spec delete!(Ecto.Schema.t(), options) :: Ecto.Schema.t()
   def delete!(struct, options \\ []) do
     repo = RepoClient.repo(options)
+    repo_options = Keyword.get(options, :repo_options, [])
 
     repo.transaction(fn ->
-      model = repo.delete!(struct, options)
+      model = repo.delete!(struct, repo_options)
       version_struct = make_version_struct(%{event: "delete"}, struct, options)
       repo.insert!(version_struct, options)
       model
