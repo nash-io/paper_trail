@@ -182,11 +182,16 @@ defmodule PaperTrail.Serializer do
     {alias, type} = Map.fetch!(dumper, field)
 
     dumped_value =
-      if(
-        type in ignored_ecto_types(),
-        do: serialize_binary(value),
-        else: do_dump_field!(schema, field, type, value, adapter)
-      )
+      cond do
+        match?({:array, _}, type) and Enum.any?(ignored_ecto_types(), & type == {:array, &1}) ->
+          Enum.map(value, &serialize_binary/1)
+
+        type in ignored_ecto_types() ->
+          serialize_binary(value)
+
+        true ->
+          do_dump_field!(schema, field, type, value, adapter)
+      end
 
     {alias, dumped_value}
   end
