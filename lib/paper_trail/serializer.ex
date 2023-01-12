@@ -184,7 +184,7 @@ defmodule PaperTrail.Serializer do
     dumped_value =
       cond do
         match?({:array, _}, type) and Enum.any?(ignored_ecto_types(), & type == {:array, &1}) ->
-          Enum.map(value, &serialize_binary/1)
+          value && Enum.map(value, &serialize_binary/1)
 
         type in ignored_ecto_types() ->
           serialize_binary(value)
