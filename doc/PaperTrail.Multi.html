@@ -4,34 +4,56 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.21.3">
-    <meta name="project" content="paper_trail v0.8.7">
-    <title>PaperTrail.Multi — paper_trail v0.8.7</title>
-    <link rel="stylesheet" href="dist/elixir-0ab8a6a80ebaaa287431.css" />
-      <link rel="canonical" href="https://hexdocs.pm/paper_trail/PaperTrail.Multi.html" />
-    <script src="dist/sidebar_items-dcc8f77f52.js"></script>
+    <meta name="generator" content="ExDoc v0.30.9">
+    <meta name="project" content="paper_trail v0.10.12">
+
+    <title>PaperTrail.Multi — paper_trail v0.10.12</title>
+    <link rel="stylesheet" href="dist/html-elixir-XFYN5IVA.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-EPF2X7PV.js"></script>
+    <script src="dist/sidebar_items-CAE5592E.js"></script>
+
       <script src="docs_config.js"></script>
-    <script async src="dist/app-a225d03098e64fef431a.js"></script>
+
+    <script async src="dist/html-J2ASZTQE.js"></script>
+
+
   </head>
-  <body data-type="modules">
-    <script>try { if(localStorage.getItem('night-mode') === 'true') document.body.className += ' night-mode'; } catch (e) { }</script>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle">
-  <span class="icon-menu" title="Collapse/expand sidebar"></span>
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
+<nav id="sidebar" class="sidebar">
   <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button">
-      <span class="icon-search" aria-hidden="true"></span>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button">
-      <span class="icon-cross" title="Cancel search"></span>
-    </button>
     <label class="search-label">
-      <input name="q" type="text" id="search-list" class="search-input" placeholder="Search..." aria-label="Search" autocomplete="off" />
+      <span class="sr-only">Search documentation of paper_trail</span>
+      <input name="q" type="text" class="search-input" placeholder="Search..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
     </label>
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+      <i class="ri-close-line ri-lg" title="Cancel search"></i>
+    </button>
   </form>
 
   <div class="autocomplete">
@@ -40,320 +62,1004 @@
   </div>
 
   <div class="sidebar-header">
+
     <div class="sidebar-projectDetails">
-      <a href="api-reference.html" class="sidebar-projectName">
-paper_trail      </a>
-      <h2 class="sidebar-projectVersion">
-        v0.8.7
-      </h2>
+      <a href="api-reference.html" class="sidebar-projectName" translate="no">
+paper_trail
+      </a>
+      <div class="sidebar-projectVersion" translate="no">
+        v0.10.12
+      </div>
     </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
   </div>
 
-  <ul class="sidebar-listNav">
-    <li><a id="extras-list" href="#full-list">Pages</a></li>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
 
-      <li><a id="tasks-list" href="#full-list">Mix Tasks</a></li>
-  </ul>
-  <div class="gradient"></div>
-  <ul id="full-list" class="sidebar-fullList"></ul>
-</section>
 
-<section class="content">
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
 
-      <h1>
-        <small class="app-vsn">paper_trail v0.8.7</small>
-PaperTrail.Multi      </h1>
+<h1>
+<button class="icon-action display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+  <span translate="no">PaperTrail.Multi</span> 
+  <small class="app-vsn" translate="no">(paper_trail v0.10.12)</small>
+
+</h1>
 
 
 
-        <section id="summary" class="details-list">
-          <h1 class="section-heading">
-            <a class="hover-link" href="#summary">
-              <span class="icon-link" aria-hidden="true"></span>
-              <span class="sr-only">Link to this section</span>
-            </a>
-            Summary
-          </h1>
-  <div class="summary-functions summary">
-    <h2>
-      <a href="#functions">Functions</a>
-    </h2>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#append/2">append(lhs, rhs)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#append/2"><code class="inline">Ecto.Multi.append/2</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#commit/1">commit(multi)</a>
-  </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#delete/3">delete(multi, struct, options \\ [origin: nil, meta: nil, originator: nil, prefix: nil])</a>
-  </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#error/3">error(multi, name, value)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#error/3"><code class="inline">Ecto.Multi.error/3</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#insert/3">insert(multi, changeset, options \\ [origin: nil, meta: nil, originator: nil, prefix: nil, model_key: :model, version_key: :version])</a>
-  </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#merge/2">merge(multi, merge)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#merge/2"><code class="inline">Ecto.Multi.merge/2</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#merge/4">merge(multi, mod, fun, args)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#merge/4"><code class="inline">Ecto.Multi.merge/4</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#new/0">new()</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#new/0"><code class="inline">Ecto.Multi.new/0</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#prepend/2">prepend(lhs, rhs)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#prepend/2"><code class="inline">Ecto.Multi.prepend/2</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#run/3">run(multi, name, run)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#run/3"><code class="inline">Ecto.Multi.run/3</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#run/5">run(multi, name, mod, fun, args)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#run/5"><code class="inline">Ecto.Multi.run/5</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#to_list/1">to_list(multi)</a>
-  </div>
-    <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#to_list/1"><code class="inline">Ecto.Multi.to_list/1</code></a>.</p></div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#update/3">update(multi, changeset, options \\ [origin: nil, meta: nil, originator: nil, prefix: nil])</a>
-  </div>
-</div>
-  </div>
-        </section>
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
 
-        <section id="functions" class="details-list">
-          <h1 class="section-heading">
-            <a class="hover-link" href="#functions">
-              <span class="icon-link" aria-hidden="true"></span>
-              <span class="sr-only">Link to this section</span>
-            </a>
-Functions          </h1>
-          <div class="functions-list">
-<section class="detail" id="append/2">
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:changeset/0" translate="no">changeset()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:multi/0" translate="no">multi()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:options/0" translate="no">options()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:queryable/0" translate="no">queryable()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:result/0" translate="no">result()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:struct_or_changeset/0" translate="no">struct_or_changeset()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:updates/0" translate="no">updates()</a>
+
+      </div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_prefix/2" translate="no">add_prefix(changeset, prefix)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.add_prefix/2</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#append/2" translate="no">append(lhs, rhs)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#append/2"><code class="inline">Ecto.Multi.append/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#commit/2" translate="no">commit(multi, options \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete/3" translate="no">delete(multi, struct_or_changeset, options \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#error/3" translate="no">error(multi, name, value)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#error/3"><code class="inline">Ecto.Multi.error/3</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_item_type/1" translate="no">get_item_type(data)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.get_item_type/1</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_model_id/1" translate="no">get_model_id(model)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.get_model_id/1</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_sequence_from_model/2" translate="no">get_sequence_from_model(changeset, options \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.get_sequence_from_model/2</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_sequence_id/2" translate="no">get_sequence_id(table_name, options \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.get_sequence_id/2</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert/3" translate="no">insert(multi, changeset, options \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#make_version_struct/3" translate="no">make_version_struct(version, model, options)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.make_version_struct/3</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#make_version_structs/4" translate="no">make_version_structs(version, queryable, changes, options)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.make_version_structs/4</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#merge/2" translate="no">merge(multi, merge)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#merge/2"><code class="inline">Ecto.Multi.merge/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#merge/4" translate="no">merge(multi, mod, fun, args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#merge/4"><code class="inline">Ecto.Multi.merge/4</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new/0" translate="no">new()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#new/0"><code class="inline">Ecto.Multi.new/0</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#prepend/2" translate="no">prepend(lhs, rhs)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#prepend/2"><code class="inline">Ecto.Multi.prepend/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run/3" translate="no">run(multi, name, run)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#run/3"><code class="inline">Ecto.Multi.run/3</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run/5" translate="no">run(multi, name, mod, fun, args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#run/5"><code class="inline">Ecto.Multi.run/5</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#serialize/2" translate="no">serialize(data, options)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <code class="inline">PaperTrail.Serializer.serialize/2</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_list/1" translate="no">to_list(multi)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#to_list/1"><code class="inline">Ecto.Multi.to_list/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update/3" translate="no">update(multi, changeset, options \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_all/4" translate="no">update_all(multi, queryable, updates, options \\ [])</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:changeset/0">
+
   <div class="detail-header">
-    <a href="#append/2" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
+    <a href="#t:changeset/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
     </a>
-    <h1 class="signature">append(lhs, rhs)</h1>
+    <h1 class="signature" translate="no">changeset()</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#append/2"><code class="inline">Ecto.Multi.append/2</code></a>.</p>
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> changeset() :: <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
-<section class="detail" id="commit/1">
+<section class="detail" id="t:multi/0">
+
   <div class="detail-header">
-    <a href="#commit/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+    <a href="#t:multi/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">multi()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> multi() :: <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#t:t/0">Ecto.Multi.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:options/0">
+
+  <div class="detail-header">
+    <a href="#t:options/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">options()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> options() :: <a href="PaperTrail.html#t:options/0">PaperTrail.options</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:queryable/0">
+
+  <div class="detail-header">
+    <a href="#t:queryable/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">queryable()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> queryable() :: <a href="PaperTrail.html#t:queryable/0">PaperTrail.queryable</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:result/0">
+
+  <div class="detail-header">
+    <a href="#t:result/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">result()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> result() ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}
+  | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}
+  | {:error, <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#t:name/0">Ecto.Multi.name</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), %{required(<a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#t:name/0">Ecto.Multi.name</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:struct_or_changeset/0">
+
+  <div class="detail-header">
+    <a href="#t:struct_or_changeset/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">struct_or_changeset()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> struct_or_changeset() :: <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Schema.html#t:t/0">Ecto.Schema.t</a>() | <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:updates/0">
+
+  <div class="detail-header">
+    <a href="#t:updates/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">updates()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> updates() :: <a href="PaperTrail.html#t:updates/0">PaperTrail.updates</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="add_prefix/2">
+
+  <div class="detail-header">
+    <a href="#add_prefix/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">commit(multi)</h1>
+    <h1 class="signature" translate="no">add_prefix(changeset, prefix)</h1>
+
+
   </div>
+
   <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.add_prefix/2</code>.</p>
+  </section>
+</section>
+<section class="detail" id="append/2">
+
+  <div class="detail-header">
+    <a href="#append/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">append(lhs, rhs)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#append/2"><code class="inline">Ecto.Multi.append/2</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="commit/2">
+
+    <span id="commit/1"></span>
+
+  <div class="detail-header">
+    <a href="#commit/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">commit(multi, options \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> commit(<a href="#t:multi/0">multi</a>(), <a href="#t:options/0">options</a>()) :: <a href="#t:result/0">result</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="delete/3">
+
     <span id="delete/2"></span>
+
   <div class="detail-header">
     <a href="#delete/3" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">delete(multi, struct, options \\ [origin: nil, meta: nil, originator: nil, prefix: nil])</h1>
+    <h1 class="signature" translate="no">delete(multi, struct_or_changeset, options \\ [])</h1>
+
+
   </div>
+
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete(<a href="#t:multi/0">multi</a>(), <a href="#t:struct_or_changeset/0">struct_or_changeset</a>(), <a href="#t:options/0">options</a>()) :: <a href="#t:multi/0">multi</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="error/3">
+
   <div class="detail-header">
     <a href="#error/3" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">error(multi, name, value)</h1>
+    <h1 class="signature" translate="no">error(multi, name, value)</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#error/3"><code class="inline">Ecto.Multi.error/3</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#error/3"><code class="inline">Ecto.Multi.error/3</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="get_item_type/1">
+
+  <div class="detail-header">
+    <a href="#get_item_type/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_item_type(data)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.get_item_type/1</code>.</p>
+  </section>
+</section>
+<section class="detail" id="get_model_id/1">
+
+  <div class="detail-header">
+    <a href="#get_model_id/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_model_id(model)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.get_model_id/1</code>.</p>
+  </section>
+</section>
+<section class="detail" id="get_sequence_from_model/2">
+
+    <span id="get_sequence_from_model/1"></span>
+
+  <div class="detail-header">
+    <a href="#get_sequence_from_model/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_sequence_from_model(changeset, options \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.get_sequence_from_model/2</code>.</p>
+  </section>
+</section>
+<section class="detail" id="get_sequence_id/2">
+
+    <span id="get_sequence_id/1"></span>
+
+  <div class="detail-header">
+    <a href="#get_sequence_id/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_sequence_id(table_name, options \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.get_sequence_id/2</code>.</p>
   </section>
 </section>
 <section class="detail" id="insert/3">
+
     <span id="insert/2"></span>
+
   <div class="detail-header">
     <a href="#insert/3" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">insert(multi, changeset, options \\ [origin: nil, meta: nil, originator: nil, prefix: nil, model_key: :model, version_key: :version])</h1>
+    <h1 class="signature" translate="no">insert(multi, changeset, options \\ [])</h1>
+
+
   </div>
+
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> insert(<a href="#t:multi/0">multi</a>(), <a href="#t:changeset/0">changeset</a>(), <a href="#t:options/0">options</a>()) :: <a href="#t:multi/0">multi</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="make_version_struct/3">
+
+  <div class="detail-header">
+    <a href="#make_version_struct/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">make_version_struct(version, model, options)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.make_version_struct/3</code>.</p>
+  </section>
+</section>
+<section class="detail" id="make_version_structs/4">
+
+  <div class="detail-header">
+    <a href="#make_version_structs/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">make_version_structs(version, queryable, changes, options)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.make_version_structs/4</code>.</p>
   </section>
 </section>
 <section class="detail" id="merge/2">
+
   <div class="detail-header">
     <a href="#merge/2" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">merge(multi, merge)</h1>
+    <h1 class="signature" translate="no">merge(multi, merge)</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#merge/2"><code class="inline">Ecto.Multi.merge/2</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#merge/2"><code class="inline">Ecto.Multi.merge/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="merge/4">
+
   <div class="detail-header">
     <a href="#merge/4" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">merge(multi, mod, fun, args)</h1>
+    <h1 class="signature" translate="no">merge(multi, mod, fun, args)</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#merge/4"><code class="inline">Ecto.Multi.merge/4</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#merge/4"><code class="inline">Ecto.Multi.merge/4</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="new/0">
+
   <div class="detail-header">
     <a href="#new/0" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">new()</h1>
+    <h1 class="signature" translate="no">new()</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#new/0"><code class="inline">Ecto.Multi.new/0</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#new/0"><code class="inline">Ecto.Multi.new/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="prepend/2">
+
   <div class="detail-header">
     <a href="#prepend/2" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">prepend(lhs, rhs)</h1>
+    <h1 class="signature" translate="no">prepend(lhs, rhs)</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#prepend/2"><code class="inline">Ecto.Multi.prepend/2</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#prepend/2"><code class="inline">Ecto.Multi.prepend/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="run/3">
+
   <div class="detail-header">
     <a href="#run/3" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">run(multi, name, run)</h1>
+    <h1 class="signature" translate="no">run(multi, name, run)</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#run/3"><code class="inline">Ecto.Multi.run/3</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#run/3"><code class="inline">Ecto.Multi.run/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="run/5">
+
   <div class="detail-header">
     <a href="#run/5" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">run(multi, name, mod, fun, args)</h1>
+    <h1 class="signature" translate="no">run(multi, name, mod, fun, args)</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#run/5"><code class="inline">Ecto.Multi.run/5</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#run/5"><code class="inline">Ecto.Multi.run/5</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="serialize/2">
+
+  <div class="detail-header">
+    <a href="#serialize/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">serialize(data, options)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <code class="inline">PaperTrail.Serializer.serialize/2</code>.</p>
   </section>
 </section>
 <section class="detail" id="to_list/1">
+
   <div class="detail-header">
     <a href="#to_list/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">to_list(multi)</h1>
+    <h1 class="signature" translate="no">to_list(multi)</h1>
+
+
   </div>
+
   <section class="docstring">
-<p>See <a href="https://hexdocs.pm/ecto/3.4.0/Ecto.Multi.html#to_list/1"><code class="inline">Ecto.Multi.to_list/1</code></a>.</p>
+
+<p>See <a href="https://hexdocs.pm/ecto/3.11.0/Ecto.Multi.html#to_list/1"><code class="inline">Ecto.Multi.to_list/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="update/3">
+
     <span id="update/2"></span>
+
   <div class="detail-header">
     <a href="#update/3" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
+      <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">update(multi, changeset, options \\ [origin: nil, meta: nil, originator: nil, prefix: nil])</h1>
+    <h1 class="signature" translate="no">update(multi, changeset, options \\ [])</h1>
+
+
   </div>
+
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> update(<a href="#t:multi/0">multi</a>(), <a href="#t:changeset/0">changeset</a>(), <a href="#t:options/0">options</a>()) :: <a href="#t:multi/0">multi</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
-          </div>
-        </section>
+<section class="detail" id="update_all/4">
+
+    <span id="update_all/3"></span>
+
+  <div class="detail-header">
+    <a href="#update_all/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">update_all(multi, queryable, updates, options \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> update_all(<a href="#t:multi/0">multi</a>(), <a href="#t:queryable/0">queryable</a>(), <a href="#t:updates/0">updates</a>(), <a href="#t:options/0">options</a>()) :: <a href="#t:multi/0">multi</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/paper_trail_copy/0.10.12" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/paper_trail_copy/0.10.12">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/paper_trail_copy/0.10.12/show/lib/paper_trail/multi.ex">current file</a>)
+
+            </span>
+
           <span class="line">
-            Built using
-            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener">ExDoc</a> (v0.21.3),
-          </span>
-          <span class="line">
-            designed by
-            <a href="https://twitter.com/dignifiedquire" target="_blank" rel="noopener" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="paper_trail.epub" title="ePub version">
+                Download ePub version
+              </a>
+
           </span>
         </p>
-        <p>
-          <button class="line footer-button display-shortcuts-help">
-            Display keyboard shortcuts
-          </button>
-          <button class="line footer-button night-mode-toggle">
-            Toggle night mode
-          </button>
-          <button class="line footer-button display-quick-switch">
-            Go to a HexDocs package
-          </button>
-          <button class="line footer-button tooltips-toggle">
-            <span class="tooltips-option-disable">Disable tooltips</span>
-            <span class="tooltips-option-enable">Enable tooltips</span>
-          </button>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.9) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
         </p>
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
+
+
   </body>
 </html>
