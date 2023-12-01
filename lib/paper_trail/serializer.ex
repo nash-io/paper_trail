@@ -1,4 +1,5 @@
 defmodule PaperTrail.Serializer do
+  @moduledoc false
   import Ecto.Query
 
   alias PaperTrail.RepoClient
@@ -12,60 +13,66 @@ defmodule PaperTrail.Serializer do
     originator = RepoClient.originator()
     originator_ref = options[originator[:name]] || options[:originator]
 
-    %Version{
-      event: "insert",
-      item_type: get_item_type(model),
-      item_id: get_model_id(model),
-      item_changes: serialize(model, options),
-      originator_id:
-        case originator_ref do
-          nil -> nil
-          _ -> originator_ref |> Map.get(:id)
-        end,
-      origin: options[:origin],
-      meta: options[:meta]
-    }
-    |> add_prefix(options[:prefix])
+    add_prefix(
+      %Version{
+        event: "insert",
+        item_type: get_item_type(model),
+        item_id: get_model_id(model),
+        item_changes: serialize(model, options),
+        originator_id:
+          case originator_ref do
+            nil -> nil
+            _ -> Map.get(originator_ref, :id)
+          end,
+        origin: options[:origin],
+        meta: options[:meta]
+      },
+      options[:prefix]
+    )
   end
 
   def make_version_struct(%{event: "update"}, changeset, options) do
     originator = RepoClient.originator()
     originator_ref = options[originator[:name]] || options[:originator]
 
-    %Version{
-      event: "update",
-      item_type: get_item_type(changeset),
-      item_id: get_model_id(changeset),
-      item_changes: serialize(changeset, options, "update"),
-      originator_id:
-        case originator_ref do
-          nil -> nil
-          _ -> originator_ref |> Map.get(:id)
-        end,
-      origin: options[:origin],
-      meta: options[:meta]
-    }
-    |> add_prefix(options[:prefix])
+    add_prefix(
+      %Version{
+        event: "update",
+        item_type: get_item_type(changeset),
+        item_id: get_model_id(changeset),
+        item_changes: serialize(changeset, options, "update"),
+        originator_id:
+          case originator_ref do
+            nil -> nil
+            _ -> Map.get(originator_ref, :id)
+          end,
+        origin: options[:origin],
+        meta: options[:meta]
+      },
+      options[:prefix]
+    )
   end
 
   def make_version_struct(%{event: "delete"}, model_or_changeset, options) do
     originator = RepoClient.originator()
     originator_ref = options[originator[:name]] || options[:originator]
 
-    %Version{
-      event: "delete",
-      item_type: get_item_type(model_or_changeset),
-      item_id: get_model_id(model_or_changeset),
-      item_changes: serialize(model_or_changeset, options),
-      originator_id:
-        case originator_ref do
-          nil -> nil
-          _ -> originator_ref |> Map.get(:id)
-        end,
-      origin: options[:origin],
-      meta: options[:meta]
-    }
-    |> add_prefix(options[:prefix])
+    add_prefix(
+      %Version{
+        event: "delete",
+        item_type: get_item_type(model_or_changeset),
+        item_id: get_model_id(model_or_changeset),
+        item_changes: serialize(model_or_changeset, options),
+        originator_id:
+          case originator_ref do
+            nil -> nil
+            _ -> Map.get(originator_ref, :id)
+          end,
+        origin: options[:origin],
+        meta: options[:meta]
+      },
+      options[:prefix]
+    )
   end
 
   @spec make_version_structs(map, PaperTrail.queryable(), Keyword.t() | map, PaperTrail.options()) ::
@@ -77,7 +84,7 @@ defmodule PaperTrail.Serializer do
     changes_map = Map.new(changes)
     originator = RepoClient.originator()
     originator_ref = options[originator[:name]] || options[:originator]
-    originator_id = if(originator_ref, do: originator_ref.id, else: nil)
+    originator_id = if(originator_ref, do: originator_ref.id)
     origin = options[:origin]
     meta = options[:meta]
     repo = RepoClient.repo(options)
@@ -130,11 +137,7 @@ defmodule PaperTrail.Serializer do
     Enum.map(list, &serialize(&1, options, event))
   end
 
-  def serialize(
-        %Ecto.Changeset{data: %schema{}, changes: changes},
-        options,
-        "update"
-      ) do
+  def serialize(%Ecto.Changeset{data: %schema{}, changes: changes}, options, "update") do
     changes
     |> schema.__struct__()
     |> do_serialize(options, "update", Map.keys(changes))
@@ -150,7 +153,13 @@ defmodule PaperTrail.Serializer do
   def do_serialize(%schema{} = model, options, event, changed_fields \\ nil) do
     fields = changed_fields || schema.__schema__(:fields)
     repo = RepoClient.repo(options)
-    {adapter, _adapter_meta} = Ecto.Repo.Registry.lookup(repo.get_dynamic_repo())
+
+    adapter =
+      case Ecto.Repo.Registry.lookup(repo.get_dynamic_repo()) do
+        {adapter, _adapter_meta} -> adapter
+        %{adapter: adapter} -> adapter
+      end
+
     changes = model |> Map.from_struct() |> Map.take(fields)
     associations = serialize_associations(model, options, event)
 
@@ -183,7 +192,7 @@ defmodule PaperTrail.Serializer do
 
     dumped_value =
       cond do
-        match?({:array, _}, type) and Enum.any?(ignored_ecto_types(), & type == {:array, &1}) ->
+        match?({:array, _}, type) and Enum.any?(ignored_ecto_types(), &(type == {:array, &1})) ->
           value && Enum.map(value, &serialize_binary/1)
 
         type in ignored_ecto_types() ->
