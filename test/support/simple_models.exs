@@ -1,4 +1,5 @@
 defmodule LocationType do
+  @moduledoc false
   use Ecto.Type
 
   defstruct [:country]
@@ -24,6 +25,7 @@ defmodule LocationType do
 end
 
 defmodule EmailOptions do
+  @moduledoc false
   use Ecto.Schema
 
   @primary_key false
@@ -37,12 +39,13 @@ defmodule EmailOptions do
 end
 
 defmodule SimpleCompany do
+  @moduledoc false
   use Ecto.Schema
-
-  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
 
   import Ecto.Changeset
   import Ecto.Query
+
+  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
 
   schema "simple_companies" do
     field(:name, :string)
@@ -55,6 +58,11 @@ defmodule SimpleCompany do
     field(:founded_in, :string)
     field(:location, LocationType)
     embeds_one(:email_options, EmailOptions, on_replace: :update)
+
+    embeds_many :addresses, Address, on_replace: :delete do
+      field(:city, :string)
+      field(:road_address, :string)
+    end
 
     has_many(:people, SimplePerson, foreign_key: :company_id)
 
@@ -77,12 +85,17 @@ defmodule SimpleCompany do
     model
     |> cast(params, @optional_fields)
     |> cast_embed(:email_options, with: &EmailOptions.changeset/2)
+    |> cast_embed(:addresses, with: &addresses_changeset/2)
     |> validate_required([:name])
     |> no_assoc_constraint(:people)
   end
 
+  defp addresses_changeset(address, params) do
+    Ecto.Changeset.cast(address, params, [:city, :road_address])
+  end
+
   def count do
-    from(record in __MODULE__, select: count(record.id)) |> PaperTrail.RepoClient.repo().one
+    PaperTrail.RepoClient.repo().one(from(record in __MODULE__, select: count(record.id)))
   end
 
   def count(:multitenant) do
@@ -93,12 +106,13 @@ defmodule SimpleCompany do
 end
 
 defmodule SimplePerson do
+  @moduledoc false
   use Ecto.Schema
-
-  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
 
   import Ecto.Changeset
   import Ecto.Query
+
+  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
 
   schema "simple_people" do
     field(:first_name, :string)
@@ -134,7 +148,7 @@ defmodule SimplePerson do
   end
 
   def count do
-    from(record in __MODULE__, select: count(record.id)) |> PaperTrail.RepoClient.repo().one
+    PaperTrail.RepoClient.repo().one(from(record in __MODULE__, select: count(record.id)))
   end
 
   def count(:multitenant) do

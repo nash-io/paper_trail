@@ -1,19 +1,21 @@
 defmodule PaperTrailTest.SimpleModeBangFunctions do
-  use ExUnit.Case
+  @moduledoc false
+  use ExUnit.Case, async: false
 
   import Ecto.Query
 
-  alias PaperTrail.Version
-  alias SimpleCompany, as: Company
-  alias SimplePerson, as: Person
-  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
   alias PaperTrail.RepoClient
   alias PaperTrail.Serializer
+  alias PaperTrail.Version
+  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
+  alias SimpleCompany, as: Company
+  alias SimplePerson, as: Person
 
   @create_company_params %{name: "Acme LLC", is_active: true, city: "Greenwich"}
   @update_company_params %{
     city: "Hong Kong",
     website: "http://www.acme.com",
+    addresses: [],
     facebook: "acme.llc"
   }
 
@@ -21,12 +23,25 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
 
   doctest PaperTrail
 
+  defmodule CustomPaperTrail do
+    @moduledoc false
+    use PaperTrail,
+      repo: PaperTrail.Repo,
+      strict_mode: false,
+      originator_type: :integer
+  end
+
   setup_all do
+    all_env = Application.get_all_env(:paper_trail)
+
     Application.put_env(:paper_trail, :strict_mode, false)
     Application.put_env(:paper_trail, :repo, PaperTrail.Repo)
     Application.put_env(:paper_trail, :originator_type, :integer)
-    Code.eval_file("lib/paper_trail.ex")
-    Code.eval_file("lib/version.ex")
+
+    on_exit(fn ->
+      Application.put_all_env(paper_trail: all_env)
+    end)
+
     MultiTenant.setup_tenant(repo())
     :ok
   end
@@ -48,12 +63,12 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count()
     version_count = Version.count()
 
-    version = PaperTrail.get_version(company) |> serialize
+    version = company |> CustomPaperTrail.get_version() |> serialize()
 
     assert company_count == 1
     assert version_count == 1
 
-    assert company |> serialize |> Map.drop([:id, :inserted_at, :updated_at]) == %{
+    assert company |> serialize() |> Map.drop([:id, :inserted_at, :updated_at]) == %{
              name: "Acme LLC",
              is_active: true,
              city: "Greenwich",
@@ -63,23 +78,24 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              twitter: nil,
              founded_in: nil,
              location: nil,
-             email_options: nil
+             email_options: nil,
+             addresses: []
            }
 
     assert Map.drop(version, [:id, :inserted_at]) == %{
              event: "insert",
              item_type: "SimpleCompany",
              item_id: company.id,
-             item_changes: company |> serialize |> convert_to_string_map,
+             item_changes: company |> serialize() |> convert_to_string_map(),
              originator_id: user.id,
              origin: nil,
              meta: nil
            }
 
-    assert company == first(Company, :id) |> repo().one
+    assert company == Company |> first(:id) |> repo().one
   end
 
-  test "PaperTrail.insert!/2 with an error raises Ecto.InvalidChangesetError" do
+  test "CustomPaperTrail.insert!/2 with an error raises Ecto.InvalidChangesetError" do
     assert_raise(Ecto.InvalidChangesetError, fn ->
       create_company_with_version(%{name: nil, is_active: true, city: "Greenwich"})
     end)
@@ -99,8 +115,8 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count()
     version_count = Version.count()
 
-    company = updated_company |> serialize
-    version = PaperTrail.get_version(updated_company) |> serialize
+    company = serialize(updated_company)
+    version = updated_company |> CustomPaperTrail.get_version() |> serialize()
 
     assert company_count == 1
     assert version_count == 2
@@ -110,6 +126,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              is_active: true,
              city: "Hong Kong",
              website: "http://www.acme.com",
+             addresses: [],
              address: nil,
              facebook: "acme.llc",
              twitter: nil,
@@ -133,7 +150,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: nil
            }
 
-    assert company == first(Company, :id) |> repo().one |> serialize
+    assert company == Company |> first(:id) |> repo().one |> serialize()
   end
 
   test "updating a company with originator[user] creates a correct company version" do
@@ -150,8 +167,8 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count()
     version_count = Version.count()
 
-    company = updated_company |> serialize
-    version = PaperTrail.get_version(updated_company) |> serialize
+    company = serialize(updated_company)
+    version = updated_company |> CustomPaperTrail.get_version() |> serialize()
 
     assert company_count == 1
     assert version_count == 2
@@ -161,6 +178,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              is_active: true,
              city: "Hong Kong",
              website: "http://www.acme.com",
+             addresses: [],
              address: nil,
              facebook: "acme.llc",
              twitter: nil,
@@ -184,10 +202,10 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: nil
            }
 
-    assert company == first(Company, :id) |> repo().one |> serialize
+    assert company == Company |> first(:id) |> repo().one |> serialize()
   end
 
-  test "PaperTrail.update!/2 with an error raises Ecto.InvalidChangesetError" do
+  test "CustomPaperTrail.update!/2 with an error raises Ecto.InvalidChangesetError" do
     assert_raise(Ecto.InvalidChangesetError, fn ->
       inserted_company = create_company_with_version()
 
@@ -195,6 +213,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
         name: nil,
         city: "Hong Kong",
         website: "http://www.acme.com",
+        addresses: [],
         facebook: "acme.llc"
       })
     end)
@@ -204,14 +223,14 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     user = create_user()
     inserted_company = create_company_with_version()
     updated_company = update_company_with_version(inserted_company)
-    company_before_deletion = first(Company, :id) |> repo().one |> serialize
-    deleted_company = PaperTrail.delete!(updated_company, originator: user)
+    company_before_deletion = Company |> first(:id) |> repo().one |> serialize()
+    deleted_company = CustomPaperTrail.delete!(updated_company, originator: user)
 
     company_count = Company.count()
     version_count = Version.count()
 
-    company = deleted_company |> serialize
-    version = PaperTrail.get_version(deleted_company) |> serialize
+    company = serialize(deleted_company)
+    version = deleted_company |> CustomPaperTrail.get_version() |> serialize()
 
     assert company_count == 0
     assert version_count == 3
@@ -221,6 +240,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              is_active: true,
              city: "Hong Kong",
              website: "http://www.acme.com",
+             addresses: [],
              address: nil,
              facebook: "acme.llc",
              twitter: nil,
@@ -241,6 +261,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
                  name: "Acme LLC",
                  is_active: true,
                  website: "http://www.acme.com",
+                 addresses: [],
                  city: "Hong Kong",
                  address: nil,
                  facebook: "acme.llc",
@@ -257,19 +278,20 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     assert company == company_before_deletion
   end
 
-  test "PaperTrail.delete!/2 with an error raises Ecto.InvalidChangesetError" do
+  test "CustomPaperTrail.delete!/2 with an error raises Ecto.InvalidChangesetError" do
     assert_raise(Ecto.InvalidChangesetError, fn ->
       inserted_company = create_company_with_version()
 
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: inserted_company.id
       })
-      |> PaperTrail.insert!()
+      |> CustomPaperTrail.insert!()
 
-      inserted_company |> Company.changeset() |> PaperTrail.delete!()
+      inserted_company |> Company.changeset() |> CustomPaperTrail.delete!()
     end)
   end
 
@@ -277,28 +299,30 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     create_company_with_version()
 
     second_company =
-      Company.changeset(%Company{}, %{
+      %Company{}
+      |> Company.changeset(%{
         name: "Another Company Corp.",
         is_active: true,
         address: "Sesame street 100/3, 101010"
       })
-      |> PaperTrail.insert!()
+      |> CustomPaperTrail.insert!()
 
     inserted_person =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: second_company.id
       })
-      |> PaperTrail.insert!(origin: "admin", meta: %{linkname: "izelnakri"})
+      |> CustomPaperTrail.insert!(origin: "admin", meta: %{linkname: "izelnakri"})
 
     person_count = Person.count()
     company_count = Company.count()
     version_count = Version.count()
 
-    person = inserted_person |> serialize
-    version = PaperTrail.get_version(inserted_person) |> serialize
+    person = serialize(inserted_person)
+    version = inserted_person |> CustomPaperTrail.get_version() |> serialize()
 
     assert person_count == 1
     assert company_count == 2
@@ -323,7 +347,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: %{"linkname" => "izelnakri"}
            }
 
-    assert person == first(Person, :id) |> repo().one |> serialize
+    assert person == Person |> first(:id) |> repo().one |> serialize()
   end
 
   test "updating a person creates a person version with correct attributes" do
@@ -341,29 +365,31 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
       })
 
     inserted_person =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: inserted_target_company.id
       })
-      |> PaperTrail.insert!(origin: "admin")
+      |> CustomPaperTrail.insert!(origin: "admin")
 
     updated_person =
-      Person.changeset(inserted_person, %{
+      inserted_person
+      |> Person.changeset(%{
         first_name: "Isaac",
         visit_count: 10,
         birthdate: ~D[1992-04-01],
         company_id: inserted_initial_company.id
       })
-      |> PaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"})
+      |> CustomPaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"})
 
     person_count = Person.count()
     company_count = Company.count()
     version_count = Version.count()
 
-    person = updated_person |> serialize
-    version = PaperTrail.get_version(updated_person) |> serialize
+    person = serialize(updated_person)
+    version = updated_person |> CustomPaperTrail.get_version() |> serialize()
 
     assert person_count == 1
     assert company_count == 2
@@ -394,7 +420,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: %{"linkname" => "izelnakri"}
            }
 
-    assert person == first(Person, :id) |> repo().one |> serialize
+    assert person == Person |> first(:id) |> repo().one |> serialize()
   end
 
   test "deleting a person creates a person version with correct attributes" do
@@ -408,27 +434,29 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
       })
 
     inserted_person =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: inserted_target_company.id
       })
-      |> PaperTrail.insert!(origin: "admin")
+      |> CustomPaperTrail.insert!(origin: "admin")
 
     updated_person =
-      Person.changeset(inserted_person, %{
+      inserted_person
+      |> Person.changeset(%{
         first_name: "Isaac",
         visit_count: 10,
         birthdate: ~D[1992-04-01],
         company_id: inserted_target_company.id
       })
-      |> PaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"})
+      |> CustomPaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"})
 
-    person_before_deletion = first(Person, :id) |> repo().one |> serialize
+    person_before_deletion = Person |> first(:id) |> repo().one |> serialize()
 
     deleted_person =
-      PaperTrail.delete!(
+      CustomPaperTrail.delete!(
         updated_person,
         origin: "admin",
         meta: %{linkname: "izelnakri"}
@@ -438,8 +466,8 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count()
     version_count = Version.count()
 
-    old_person = updated_person |> serialize
-    version = PaperTrail.get_version(deleted_person) |> serialize
+    old_person = serialize(updated_person)
+    version = deleted_person |> CustomPaperTrail.get_version() |> serialize()
 
     assert person_count == 0
     assert company_count == 2
@@ -479,15 +507,16 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     version_count = Version.count(prefix: tenant)
 
     version =
-      PaperTrail.get_version(company, prefix: tenant)
-      |> serialize
+      company
+      |> CustomPaperTrail.get_version(prefix: tenant)
+      |> serialize()
 
     assert Company.count() == 0
     assert Version.count() == 0
     assert company_count == 1
     assert version_count == 1
 
-    assert company |> serialize |> Map.drop([:id, :inserted_at, :updated_at]) == %{
+    assert company |> serialize() |> Map.drop([:id, :inserted_at, :updated_at]) == %{
              name: "Acme LLC",
              is_active: true,
              city: "Greenwich",
@@ -497,14 +526,15 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              twitter: nil,
              founded_in: nil,
              location: nil,
-             email_options: nil
+             email_options: nil,
+             addresses: []
            }
 
     assert Map.drop(version, [:id, :inserted_at]) == %{
              event: "insert",
              item_type: "SimpleCompany",
              item_id: company.id,
-             item_changes: company |> serialize |> convert_to_string_map,
+             item_changes: company |> serialize() |> convert_to_string_map(),
              originator_id: user.id,
              origin: nil,
              meta: nil
@@ -513,7 +543,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     assert company == first_company(:multitenant)
   end
 
-  test "[multi tenant] PaperTrail.insert!/2 with an error raises Ecto.InvalidChangesetError" do
+  test "[multi tenant] CustomPaperTrail.insert!/2 with an error raises Ecto.InvalidChangesetError" do
     assert_raise(Ecto.InvalidChangesetError, fn ->
       create_company_with_version_multi(%{name: nil, is_active: true, city: "Greenwich"})
     end)
@@ -534,11 +564,12 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count(:multitenant)
     version_count = Version.count(prefix: tenant)
 
-    company = updated_company |> serialize
+    company = serialize(updated_company)
 
     version =
-      PaperTrail.get_version(updated_company, prefix: tenant)
-      |> serialize
+      updated_company
+      |> CustomPaperTrail.get_version(prefix: tenant)
+      |> serialize()
 
     assert Company.count() == 0
     assert Version.count() == 0
@@ -550,6 +581,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              is_active: true,
              city: "Hong Kong",
              website: "http://www.acme.com",
+             addresses: [],
              address: nil,
              facebook: "acme.llc",
              twitter: nil,
@@ -573,7 +605,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: nil
            }
 
-    assert company == first_company(:multitenant) |> serialize
+    assert company == :multitenant |> first_company() |> serialize()
   end
 
   test "[multi tenant] updating a company with originator[user] creates a correct company version" do
@@ -592,11 +624,12 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count(:multitenant)
     version_count = Version.count(prefix: tenant)
 
-    company = updated_company |> serialize
+    company = serialize(updated_company)
 
     version =
-      PaperTrail.get_version(updated_company, prefix: tenant)
-      |> serialize
+      updated_company
+      |> CustomPaperTrail.get_version(prefix: tenant)
+      |> serialize()
 
     assert Company.count() == 0
     assert Version.count() == 0
@@ -608,6 +641,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              is_active: true,
              city: "Hong Kong",
              website: "http://www.acme.com",
+             addresses: [],
              address: nil,
              facebook: "acme.llc",
              twitter: nil,
@@ -631,10 +665,10 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: nil
            }
 
-    assert company == first_company(:multitenant) |> serialize
+    assert company == :multitenant |> first_company() |> serialize()
   end
 
-  test "[multi tenant] PaperTrail.update!/2 with an error raises Ecto.InvalidChangesetError" do
+  test "[multi tenant] CustomPaperTrail.update!/2 with an error raises Ecto.InvalidChangesetError" do
     assert_raise(Ecto.InvalidChangesetError, fn ->
       inserted_company = create_company_with_version_multi()
 
@@ -642,6 +676,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
         name: nil,
         city: "Hong Kong",
         website: "http://www.acme.com",
+        addresses: [],
         facebook: "acme.llc"
       })
     end)
@@ -653,10 +688,10 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     user = create_user(:multitenant)
     inserted_company = create_company_with_version_multi()
     updated_company = update_company_with_version_multi(inserted_company)
-    company_before_deletion = first_company(:multitenant) |> serialize
+    company_before_deletion = :multitenant |> first_company() |> serialize()
 
     deleted_company =
-      PaperTrail.delete!(
+      CustomPaperTrail.delete!(
         updated_company,
         originator: user,
         prefix: tenant
@@ -665,8 +700,8 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count(:multitenant)
     version_count = Version.count(prefix: tenant)
 
-    company = deleted_company |> serialize
-    version = PaperTrail.get_version(deleted_company, prefix: tenant) |> serialize
+    company = serialize(deleted_company)
+    version = deleted_company |> CustomPaperTrail.get_version(prefix: tenant) |> serialize()
 
     assert Company.count() == 0
     assert Version.count() == 0
@@ -678,6 +713,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              is_active: true,
              city: "Hong Kong",
              website: "http://www.acme.com",
+             addresses: [],
              address: nil,
              facebook: "acme.llc",
              twitter: nil,
@@ -698,6 +734,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
                  name: "Acme LLC",
                  is_active: true,
                  website: "http://www.acme.com",
+                 addresses: [],
                  city: "Hong Kong",
                  address: nil,
                  facebook: "acme.llc",
@@ -714,25 +751,26 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     assert company == company_before_deletion
   end
 
-  test "[multi tenant] PaperTrail.delete!/2 with an error raises Ecto.InvalidChangesetError" do
+  test "[multi tenant] CustomPaperTrail.delete!/2 with an error raises Ecto.InvalidChangesetError" do
     tenant = MultiTenant.tenant()
 
     assert_raise(Ecto.InvalidChangesetError, fn ->
       inserted_company = create_company_with_version_multi()
 
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: inserted_company.id
       })
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.insert!(prefix: tenant)
+      |> CustomPaperTrail.insert!(prefix: tenant)
 
       inserted_company
       |> Company.changeset()
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.delete!(prefix: tenant)
+      |> CustomPaperTrail.delete!(prefix: tenant)
     end)
   end
 
@@ -742,23 +780,25 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     create_company_with_version_multi()
 
     second_company =
-      Company.changeset(%Company{}, %{
+      %Company{}
+      |> Company.changeset(%{
         name: "Another Company Corp.",
         is_active: true,
         address: "Sesame street 100/3, 101010"
       })
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.insert!(prefix: tenant)
+      |> CustomPaperTrail.insert!(prefix: tenant)
 
     inserted_person =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: second_company.id
       })
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.insert!(origin: "admin", meta: %{linkname: "izelnakri"}, prefix: tenant)
+      |> CustomPaperTrail.insert!(origin: "admin", meta: %{linkname: "izelnakri"}, prefix: tenant)
 
     assert Person.count() == 0
     assert Company.count() == 0
@@ -767,8 +807,8 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count(:multitenant)
     version_count = Version.count(prefix: tenant)
 
-    person = inserted_person |> serialize
-    version = PaperTrail.get_version(inserted_person, prefix: tenant) |> serialize
+    person = serialize(inserted_person)
+    version = inserted_person |> CustomPaperTrail.get_version(prefix: tenant) |> serialize()
 
     assert person_count == 1
     assert company_count == 2
@@ -793,7 +833,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: %{"linkname" => "izelnakri"}
            }
 
-    assert person == first_person(:multitenant) |> serialize
+    assert person == :multitenant |> first_person() |> serialize()
   end
 
   test "[multi tenant] updating a person creates a person version with correct attributes" do
@@ -813,31 +853,33 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
       })
 
     inserted_person =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: inserted_target_company.id
       })
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.insert!(origin: "admin", prefix: tenant)
+      |> CustomPaperTrail.insert!(origin: "admin", prefix: tenant)
 
     updated_person =
-      Person.changeset(inserted_person, %{
+      inserted_person
+      |> Person.changeset(%{
         first_name: "Isaac",
         visit_count: 10,
         birthdate: ~D[1992-04-01],
         company_id: inserted_initial_company.id
       })
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"}, prefix: tenant)
+      |> CustomPaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"}, prefix: tenant)
 
     person_count = Person.count(:multitenant)
     company_count = Company.count(:multitenant)
     version_count = Version.count(prefix: tenant)
 
-    person = updated_person |> serialize
-    version = PaperTrail.get_version(updated_person, prefix: tenant) |> serialize
+    person = serialize(updated_person)
+    version = updated_person |> CustomPaperTrail.get_version(prefix: tenant) |> serialize()
 
     assert Person.count() == 0
     assert Company.count() == 0
@@ -871,7 +913,7 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
              meta: %{"linkname" => "izelnakri"}
            }
 
-    assert person == first_person(:multitenant) |> serialize
+    assert person == :multitenant |> first_person() |> serialize()
   end
 
   test "[multi tenant] deleting a person creates a person version with correct attributes" do
@@ -887,29 +929,31 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
       })
 
     inserted_person =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: inserted_target_company.id
       })
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.insert!(origin: "admin", prefix: tenant)
+      |> CustomPaperTrail.insert!(origin: "admin", prefix: tenant)
 
     updated_person =
-      Person.changeset(inserted_person, %{
+      inserted_person
+      |> Person.changeset(%{
         first_name: "Isaac",
         visit_count: 10,
         birthdate: ~D[1992-04-01],
         company_id: inserted_target_company.id
       })
       |> MultiTenant.add_prefix_to_changeset()
-      |> PaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"}, prefix: tenant)
+      |> CustomPaperTrail.update!(origin: "scraper", meta: %{linkname: "izelnakri"}, prefix: tenant)
 
-    person_before_deletion = first_person(:multitenant) |> serialize
+    person_before_deletion = :multitenant |> first_person() |> serialize()
 
     deleted_person =
-      PaperTrail.delete!(
+      CustomPaperTrail.delete!(
         updated_person,
         origin: "admin",
         meta: %{linkname: "izelnakri"},
@@ -920,8 +964,8 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
     company_count = Company.count(:multitenant)
     version_count = Version.count(prefix: tenant)
 
-    old_person = updated_person |> serialize
-    version = PaperTrail.get_version(deleted_person, prefix: tenant) |> serialize
+    old_person = serialize(updated_person)
+    version = deleted_person |> CustomPaperTrail.get_version(prefix: tenant) |> serialize()
 
     assert Person.count() == 0
     assert Company.count() == 0
@@ -955,54 +999,54 @@ defmodule PaperTrailTest.SimpleModeBangFunctions do
   end
 
   # Functions
-  defp create_user() do
-    User.changeset(%User{}, %{token: "fake-token", username: "izelnakri"})
+  defp create_user do
+    %User{}
+    |> User.changeset(%{token: "fake-token", username: "izelnakri"})
     |> repo().insert!
   end
 
   defp create_user(:multitenant) do
-    User.changeset(%User{}, %{token: "fake-token", username: "izelnakri"})
+    %User{}
+    |> User.changeset(%{token: "fake-token", username: "izelnakri"})
     |> MultiTenant.add_prefix_to_changeset()
     |> repo().insert!
   end
 
   defp create_company_with_version(params \\ @create_company_params, options \\ []) do
-    Company.changeset(%Company{}, params) |> PaperTrail.insert!(options)
+    %Company{} |> Company.changeset(params) |> CustomPaperTrail.insert!(options)
   end
 
   defp create_company_with_version_multi(params \\ @create_company_params, options \\ []) do
     opts_with_prefix = Keyword.put(options || [], :prefix, MultiTenant.tenant())
 
-    Company.changeset(%Company{}, params)
+    %Company{}
+    |> Company.changeset(params)
     |> MultiTenant.add_prefix_to_changeset()
-    |> PaperTrail.insert!(opts_with_prefix)
+    |> CustomPaperTrail.insert!(opts_with_prefix)
   end
 
   defp update_company_with_version(company, params \\ @update_company_params, options \\ []) do
-    Company.changeset(company, params) |> PaperTrail.update!(options)
+    company |> Company.changeset(params) |> CustomPaperTrail.update!(options)
   end
 
-  defp update_company_with_version_multi(
-         company,
-         params \\ @update_company_params,
-         options \\ []
-       ) do
+  defp update_company_with_version_multi(company, params \\ @update_company_params, options \\ []) do
     opts_with_prefix = Keyword.put(options || [], :prefix, MultiTenant.tenant())
 
-    Company.changeset(company, params)
+    company
+    |> Company.changeset(params)
     |> MultiTenant.add_prefix_to_changeset()
-    |> PaperTrail.update!(opts_with_prefix)
+    |> CustomPaperTrail.update!(opts_with_prefix)
   end
 
   defp first_company(:multitenant) do
-    first(Company, :id) |> MultiTenant.add_prefix_to_query() |> repo().one()
+    Company |> first(:id) |> MultiTenant.add_prefix_to_query() |> repo().one()
   end
 
   defp first_person(:multitenant) do
-    first(Person, :id) |> MultiTenant.add_prefix_to_query() |> repo().one()
+    Person |> first(:id) |> MultiTenant.add_prefix_to_query() |> repo().one()
   end
 
-  defp reset_all_data() do
+  defp reset_all_data do
     repo().delete_all(Person)
     repo().delete_all(Company)
     repo().delete_all(Version)

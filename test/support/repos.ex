@@ -7,6 +7,7 @@ defmodule PaperTrail.UUIDRepo do
 end
 
 defmodule User do
+  @moduledoc false
   use Ecto.Schema
 
   import Ecto.Changeset

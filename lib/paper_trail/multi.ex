@@ -1,11 +1,12 @@
 defmodule PaperTrail.Multi do
+  @moduledoc false
   import Ecto.Changeset
 
   alias Ecto.Changeset
   alias PaperTrail
-  alias PaperTrail.Version
   alias PaperTrail.RepoClient
   alias PaperTrail.Serializer
+  alias PaperTrail.Version
 
   @type multi :: Ecto.Multi.t()
   @type changeset :: Changeset.t()
@@ -45,137 +46,109 @@ defmodule PaperTrail.Multi do
     version_key = get_version_key(options)
     repo_options = Keyword.get(options, :repo_options, [])
 
-    case RepoClient.strict_mode(options) do
-      true ->
-        multi
-        |> Ecto.Multi.run(:initial_version, fn repo, %{} ->
-          version_id = get_sequence_id("versions", options) + 1
+    if RepoClient.strict_mode(options) do
+      multi
+      |> Ecto.Multi.run(:initial_version, fn repo, %{} ->
+        version_id = get_sequence_id("versions", options) + 1
 
-          changeset_data =
-            Map.get(changeset, :data, changeset)
-            |> Map.merge(%{
-              id: get_sequence_from_model(changeset, options) + 1,
-              first_version_id: version_id,
-              current_version_id: version_id
-            })
+        changeset_data =
+          changeset
+          |> Map.get(:data, changeset)
+          |> Map.merge(%{
+            id: get_sequence_from_model(changeset, options) + 1,
+            first_version_id: version_id,
+            current_version_id: version_id
+          })
 
-          initial_version = make_version_struct(%{event: "insert"}, changeset_data, options)
-          repo.insert(initial_version)
-        end)
-        |> Ecto.Multi.run(model_key, fn repo, %{initial_version: initial_version} ->
-          updated_changeset =
-            changeset
-            |> change(%{
-              first_version_id: initial_version.id,
-              current_version_id: initial_version.id
-            })
+        initial_version = make_version_struct(%{event: "insert"}, changeset_data, options)
+        repo.insert(initial_version)
+      end)
+      |> Ecto.Multi.run(model_key, fn repo, %{initial_version: initial_version} ->
+        updated_changeset =
+          change(changeset, %{first_version_id: initial_version.id, current_version_id: initial_version.id})
 
-          repo.insert(updated_changeset, repo_options)
-        end)
-        |> Ecto.Multi.run(version_key, fn repo,
-                                          %{
-                                            :initial_version => initial_version,
-                                            ^model_key => model
-                                          } ->
-          target_version =
-            make_version_struct(%{event: "insert"}, model, options) |> serialize(options)
+        repo.insert(updated_changeset, repo_options)
+      end)
+      |> Ecto.Multi.run(version_key, fn repo,
+                                        %{
+                                          :initial_version => initial_version,
+                                          ^model_key => model
+                                        } ->
+        target_version =
+          %{event: "insert"} |> make_version_struct(model, options) |> serialize(options)
 
-          Version.changeset(initial_version, target_version) |> repo.update
-        end)
-
-      _ ->
-        multi
-        |> Ecto.Multi.insert(model_key, changeset, repo_options)
-        |> Ecto.Multi.run(version_key, fn repo, %{^model_key => model} ->
-          version = make_version_struct(%{event: "insert"}, model, options)
-          repo.insert(version)
-        end)
+        initial_version |> Version.changeset(target_version) |> repo.update
+      end)
+    else
+      multi
+      |> Ecto.Multi.insert(model_key, changeset, repo_options)
+      |> Ecto.Multi.run(version_key, fn repo, %{^model_key => model} ->
+        version = make_version_struct(%{event: "insert"}, model, options)
+        repo.insert(version)
+      end)
     end
   end
 
   @spec update(multi, changeset, options) :: multi
-  def update(
-        %Ecto.Multi{} = multi,
-        changeset,
-        options \\ []
-      ) do
+  def update(%Ecto.Multi{} = multi, changeset, options \\ []) do
     model_key = get_model_key(options)
     version_key = get_version_key(options)
     repo_options = Keyword.get(options, :repo_options, [])
 
-    case RepoClient.strict_mode(options) do
-      true ->
-        multi
-        |> Ecto.Multi.run(:initial_version, fn repo, %{} ->
-          version_data =
-            changeset.data
-            |> Map.merge(%{
-              current_version_id: get_sequence_id("versions", options)
-            })
+    if RepoClient.strict_mode(options) do
+      multi
+      |> Ecto.Multi.run(:initial_version, fn repo, %{} ->
+        version_data =
+          Map.merge(changeset.data, %{current_version_id: get_sequence_id("versions", options)})
 
-          target_changeset = changeset |> Map.merge(%{data: version_data})
-          target_version = make_version_struct(%{event: "update"}, target_changeset, options)
-          repo.insert(target_version)
-        end)
-        |> Ecto.Multi.run(model_key, fn repo, %{initial_version: initial_version} ->
-          updated_changeset = changeset |> change(%{current_version_id: initial_version.id})
-          repo.update(updated_changeset, repo_options)
-        end)
-        |> Ecto.Multi.run(version_key, fn repo, %{initial_version: initial_version} ->
-          new_item_changes =
-            initial_version.item_changes
-            |> Map.merge(%{
-              current_version_id: initial_version.id
-            })
+        target_changeset = Map.merge(changeset, %{data: version_data})
+        target_version = make_version_struct(%{event: "update"}, target_changeset, options)
+        repo.insert(target_version)
+      end)
+      |> Ecto.Multi.run(model_key, fn repo, %{initial_version: initial_version} ->
+        updated_changeset = change(changeset, %{current_version_id: initial_version.id})
+        repo.update(updated_changeset, repo_options)
+      end)
+      |> Ecto.Multi.run(version_key, fn repo, %{initial_version: initial_version} ->
+        new_item_changes =
+          Map.merge(initial_version.item_changes, %{current_version_id: initial_version.id})
 
-          initial_version |> change(%{item_changes: new_item_changes}) |> repo.update
-        end)
+        initial_version |> change(%{item_changes: new_item_changes}) |> repo.update
+      end)
+    else
+      multi
+      |> Ecto.Multi.update(model_key, changeset, repo_options)
+      |> Ecto.Multi.run(version_key, fn repo, _changes ->
+        version = make_version_struct(%{event: "update"}, changeset, options)
 
-      _ ->
-        multi
-        |> Ecto.Multi.update(model_key, changeset, repo_options)
-        |> Ecto.Multi.run(version_key, fn repo, _changes ->
-          version = make_version_struct(%{event: "update"}, changeset, options)
-
-          if changeset.changes == %{} do
-            {:ok, nil}
-          else
-            repo.insert(version)
-          end
-        end)
+        if changeset.changes == %{} do
+          {:ok, nil}
+        else
+          repo.insert(version)
+        end
+      end)
     end
   end
 
   @spec update_all(multi, queryable, updates, options) :: multi
-  def update_all(
-        %Ecto.Multi{} = multi,
-        queryable,
-        [set: changes] = updates,
-        options \\ []
-      ) do
+  def update_all(%Ecto.Multi{} = multi, queryable, [set: changes] = updates, options \\ []) do
     model_key = get_model_key(options)
     version_key = get_version_key(options)
     entries = make_version_structs(%{event: "update"}, queryable, changes, options)
     returning = !!options[:returning] && RepoClient.return_operation(options) == version_key
     repo_options = Keyword.get(options, :repo_options, [])
 
-    case RepoClient.strict_mode(options) do
-      true ->
-        raise "Strict mode not implemented for update_all"
-
-      _ ->
-        multi
-        |> Ecto.Multi.update_all(model_key, queryable, updates, repo_options)
-        |> Ecto.Multi.insert_all(version_key, Version, entries, returning: returning)
+    if RepoClient.strict_mode(options) do
+      raise "Strict mode not implemented for update_all"
+    else
+      multi
+      |> Ecto.Multi.update_all(model_key, queryable, updates, repo_options)
+      |> Ecto.Multi.insert_all(version_key, Version, entries, returning: returning)
     end
   end
 
   @spec delete(multi, struct_or_changeset, options) :: multi
-  def delete(
-        %Ecto.Multi{} = multi,
-        struct_or_changeset,
-        options \\ []
-      ) do
+  def delete(%Ecto.Multi{} = multi, struct_or_changeset, options \\ []) do
     model_key = get_model_key(options)
     version_key = get_version_key(options)
     repo_options = Keyword.get(options, :repo_options, [])
@@ -195,24 +168,22 @@ defmodule PaperTrail.Multi do
 
     transaction = repo.transaction(multi)
 
-    case RepoClient.strict_mode(options) do
-      true ->
-        case transaction do
-          {:error, ^model_key, changeset, %{}} ->
-            filtered_changes =
-              Map.drop(changeset.changes, [:current_version_id, :first_version_id])
+    if RepoClient.strict_mode(options) do
+      case transaction do
+        {:error, ^model_key, changeset, %{}} ->
+          filtered_changes =
+            Map.drop(changeset.changes, [:current_version_id, :first_version_id])
 
-            {:error, Map.merge(changeset, %{repo: repo, changes: filtered_changes})}
+          {:error, Map.merge(changeset, %{repo: repo, changes: filtered_changes})}
 
-          {:ok, map} ->
-            {:ok, map |> Map.drop([:initial_version]) |> return_operation(options)}
-        end
-
-      _ ->
-        case transaction do
-          {:error, ^model_key, changeset, %{}} -> {:error, Map.merge(changeset, %{repo: repo})}
-          {:ok, result} -> {:ok, return_operation(result, options)}
-        end
+        {:ok, map} ->
+          {:ok, map |> Map.drop([:initial_version]) |> return_operation(options)}
+      end
+    else
+      case transaction do
+        {:error, ^model_key, changeset, %{}} -> {:error, Map.merge(changeset, %{repo: repo})}
+        {:ok, result} -> {:ok, return_operation(result, options)}
+      end
     end
   end
 

@@ -1,10 +1,11 @@
 defmodule PaperTrailTest.Version do
-  use ExUnit.Case
+  @moduledoc false
+  use ExUnit.Case, async: false
 
-  alias PaperTrail.Version
-  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
   alias PaperTrail.RepoClient
   alias PaperTrail.Serializer
+  alias PaperTrail.Version
+  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
 
   @valid_attrs %{
     event: "insert",
@@ -19,16 +20,25 @@ defmodule PaperTrailTest.Version do
   defdelegate repo, to: RepoClient
 
   setup_all do
-    Application.put_env(:paper_trail, :strict_mode, false)
-    Application.put_env(:paper_trail, :repo, PaperTrail.Repo)
-    Application.put_env(:paper_trail, :originator_type, :integer)
-    Code.eval_file("lib/paper_trail.ex")
-    Code.eval_file("lib/version.ex")
     MultiTenant.setup_tenant(repo())
+
     :ok
   end
 
   setup do
+    all_env = Application.get_all_env(:paper_trail)
+
+    Application.put_env(:paper_trail, :strict_mode, false)
+    Application.put_env(:paper_trail, :repo, PaperTrail.Repo)
+    Application.put_env(:paper_trail, :originator_type, :integer)
+    Application.put_env(:paper_trail, :item_type, :integer)
+
+    Code.eval_file("lib/version.ex")
+
+    on_exit(fn ->
+      Application.put_all_env(paper_trail: all_env)
+    end)
+
     repo().delete_all(Version)
 
     Version
@@ -73,7 +83,7 @@ defmodule PaperTrailTest.Version do
 
     target_version =
       Version.first()
-      |> serialize
+      |> serialize()
       |> Map.drop([
         :id,
         :meta,
@@ -87,7 +97,7 @@ defmodule PaperTrailTest.Version do
   test "last works" do
     add_three_versions()
 
-    assert Version.last() |> serialize != %{
+    assert serialize(Version.last()) != %{
              event: "insert",
              item_type: "Person",
              item_id: 3,
@@ -108,8 +118,9 @@ defmodule PaperTrailTest.Version do
     add_three_versions(MultiTenant.tenant())
 
     target_version =
-      Version.first(prefix: MultiTenant.tenant())
-      |> serialize
+      [prefix: MultiTenant.tenant()]
+      |> Version.first()
+      |> serialize()
       |> Map.drop([
         :id,
         :meta,
@@ -131,7 +142,7 @@ defmodule PaperTrailTest.Version do
   test "[multi tenant] last works" do
     add_three_versions(MultiTenant.tenant())
 
-    assert Version.last(prefix: MultiTenant.tenant()) |> serialize != %{
+    assert [prefix: MultiTenant.tenant()] |> Version.last() |> serialize() != %{
              event: "insert",
              item_type: "Person",
              item_id: 3,
@@ -144,8 +155,8 @@ defmodule PaperTrailTest.Version do
   end
 
   def add_three_versions(prefix \\ nil) do
-    repo().insert_all(
-      Version,
+    Version
+    |> repo().insert_all(
       [
         @valid_attrs,
         %{
