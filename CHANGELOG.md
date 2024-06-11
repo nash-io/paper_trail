@@ -1,3 +1,8 @@
+### v0.9.0 - June 11th, 2024:
+- Support serialization of list of embeds
+- Update Ecto and EctoSql to 3.11.2
+- Require Elixir >= 1.13
+
 ### v0.8.3 - September 10th, 2019:
 - PaperTrail.delete now accepts Ecto.Changeset
 

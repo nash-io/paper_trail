@@ -23,13 +23,10 @@ defmodule PaperTrailTest.UUIDTest do
     Application.put_env(:paper_trail, :originator_type, Ecto.UUID)
     Application.put_env(:paper_trail, :item_type, Ecto.UUID)
 
-    Code.eval_file("lib/paper_trail.ex")
     Code.eval_file("lib/version.ex")
 
     on_exit(fn ->
       Application.put_all_env(paper_trail: all_env)
-      Code.eval_file("lib/paper_trail.ex")
-      Code.eval_file("lib/version.ex")
     end)
 
     repo().delete_all(Version)

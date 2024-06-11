@@ -35,13 +35,9 @@ defmodule PaperTrailTest do
 
   setup_all do
     all_env = Application.get_all_env(:paper_trail)
-    Code.eval_file("lib/paper_trail.ex")
-    Code.eval_file("lib/version.ex")
 
     on_exit(fn ->
       Application.put_all_env(paper_trail: all_env)
-      Code.eval_file("lib/paper_trail.ex")
-      Code.eval_file("lib/version.ex")
     end)
 
     :ok
