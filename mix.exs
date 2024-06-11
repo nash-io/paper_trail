@@ -6,6 +6,7 @@ defmodule PaperTrail.Mixfile do
       app: :paper_trail,
       version: "0.11.0",
       elixir: "~> 1.15",
+      source_url: "https://github.com/nash-io/paper_trail",
       description: description(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -47,13 +48,14 @@ defmodule PaperTrail.Mixfile do
 
   defp package do
     [
-      name: :paper_trail,
+      name: :paper_trail_nash,
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
-      maintainers: ["Izel Nakri"],
+      maintainers: ["Rafael Scheffer"],
       licenses: ["MIT License"],
+      organization: "neonexchange",
       links: %{
-        "GitHub" => "https://github.com/izelnakri/paper_trail",
-        "Docs" => "https://hexdocs.pm/paper_trail/PaperTrail.html"
+        "GitHub" => "https://github.com/nash-io/paper_trail",
+        "Docs" => "https://hexdocs.pm/paper_trail_nash/PaperTrail.html"
       }
     ]
   end
