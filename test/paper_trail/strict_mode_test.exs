@@ -1,13 +1,13 @@
 # test one with user:, one with originator
 defmodule PaperTrailStrictModeTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   import Ecto.Query
 
+  alias PaperTrail.Serializer
   alias PaperTrail.Version
   alias StrictCompany, as: Company
   alias StrictPerson, as: Person
-  alias PaperTrail.Serializer
 
   @repo PaperTrail.RepoClient.repo()
   @create_company_params %{name: "Acme LLC", is_active: true, city: "Greenwich"}
@@ -19,12 +19,12 @@ defmodule PaperTrailStrictModeTest do
 
   doctest PaperTrail
 
-  setup_all do
-    Application.put_env(:paper_trail, :strict_mode, true)
-    Application.put_env(:paper_trail, :repo, PaperTrail.Repo)
-    Code.eval_file("lib/paper_trail.ex")
-    Code.eval_file("lib/version.ex")
-    :ok
+  defmodule CustomPaperTrail do
+    @moduledoc false
+    use PaperTrail,
+      repo: PaperTrail.Repo,
+      strict_mode: true,
+      originator_type: :integer
   end
 
   setup do
@@ -48,10 +48,10 @@ defmodule PaperTrailStrictModeTest do
     company_count = Company.count()
     version_count = Version.count()
 
-    company = result[:model] |> serialize()
-    version = result[:version] |> serialize()
+    company = serialize(result[:model])
+    version = serialize(result[:version])
 
-    assert Map.keys(result) == [:model, :version]
+    assert Map.keys(result) == [:version, :model]
     assert company_count == 1
     assert version_count == 1
 
@@ -78,18 +78,18 @@ defmodule PaperTrailStrictModeTest do
              meta: nil
            }
 
-    assert company == first(Company, :id) |> @repo.one |> serialize
+    assert company == Company |> first(:id) |> @repo.one |> serialize()
   end
 
   test "creating a company without changeset creates a company version with correct attributes" do
-    {:ok, result} = PaperTrail.insert(%Company{name: "Acme LLC"})
+    {:ok, result} = CustomPaperTrail.insert(%Company{name: "Acme LLC"})
     company_count = Company.count()
     version_count = Version.count()
 
-    company = result[:model] |> serialize
-    version = result[:version] |> serialize
+    company = serialize(result[:model])
+    version = serialize(result[:version])
 
-    assert Map.keys(result) == [:model, :version]
+    assert Map.keys(result) == [:version, :model]
     assert company_count == 1
     assert version_count == 1
 
@@ -117,11 +117,12 @@ defmodule PaperTrailStrictModeTest do
            }
   end
 
-  test "PaperTrail.insert/2 with an error returns and error tuple like Repo.insert/2" do
+  test "CustomPaperTrail.insert/2 with an error returns and error tuple like Repo.insert/2" do
     result = create_company_with_version(%{name: nil, is_active: true, city: "Greenwich"})
 
     ecto_result =
-      Company.changeset(%Company{}, %{name: nil, is_active: true, city: "Greenwich"})
+      %Company{}
+      |> Company.changeset(%{name: nil, is_active: true, city: "Greenwich"})
       |> @repo.insert
 
     assert result == ecto_result
@@ -141,10 +142,10 @@ defmodule PaperTrailStrictModeTest do
     company_count = Company.count()
     version_count = Version.count()
 
-    company = result[:model] |> serialize
-    version = result[:version] |> serialize
+    company = serialize(result[:model])
+    version = serialize(result[:version])
 
-    assert Map.keys(result) == [:model, :version]
+    assert Map.keys(result) == [:version, :model]
     assert company_count == 1
     assert version_count == 2
 
@@ -176,10 +177,10 @@ defmodule PaperTrailStrictModeTest do
              meta: nil
            }
 
-    assert company == first(Company, :id) |> @repo.one |> serialize
+    assert company == Company |> first(:id) |> @repo.one |> serialize()
   end
 
-  test "PaperTrail.update/2 with an error returns and error tuple like Repo.update/2" do
+  test "CustomPaperTrail.update/2 with an error returns and error tuple like Repo.update/2" do
     {:ok, insert_result} = create_company_with_version()
     company = insert_result[:model]
 
@@ -192,7 +193,8 @@ defmodule PaperTrailStrictModeTest do
       })
 
     ecto_result =
-      Company.changeset(company, %{
+      company
+      |> Company.changeset(%{
         name: nil,
         city: "Hong Kong",
         website: "http://www.acme.com",
@@ -207,16 +209,16 @@ defmodule PaperTrailStrictModeTest do
     user = create_user()
     {:ok, insert_company_result} = create_company_with_version()
     {:ok, update_company_result} = update_company_with_version(insert_company_result[:model])
-    company_before_deletion = first(Company, :id) |> @repo.one |> serialize
-    {:ok, result} = PaperTrail.delete(update_company_result[:model], user: user)
+    company_before_deletion = Company |> first(:id) |> @repo.one |> serialize()
+    {:ok, result} = CustomPaperTrail.delete(update_company_result[:model], user: user)
 
     company_count = Company.count()
     version_count = Version.count()
 
-    old_company = result[:model] |> serialize()
-    version = result[:version] |> serialize()
+    old_company = serialize(result[:model])
+    version = serialize(result[:version])
 
-    assert Map.keys(result) == [:model, :version]
+    assert Map.keys(result) == [:version, :model]
     assert company_count == 0
     assert version_count == 3
 
@@ -260,19 +262,20 @@ defmodule PaperTrailStrictModeTest do
     assert old_company == company_before_deletion
   end
 
-  test "PaperTrail.delete/2 with an error returns and error tuple like Repo.delete/2" do
+  test "CustomPaperTrail.delete/2 with an error returns and error tuple like Repo.delete/2" do
     {:ok, insert_company_result} = create_company_with_version()
 
-    Person.changeset(%Person{}, %{
+    %Person{}
+    |> Person.changeset(%{
       first_name: "Izel",
       last_name: "Nakri",
       gender: true,
       company_id: insert_company_result[:model].id
     })
-    |> PaperTrail.insert()
+    |> CustomPaperTrail.insert()
 
     {:error, ecto_result} = insert_company_result[:model] |> Company.changeset() |> @repo.delete
-    {:error, result} = insert_company_result[:model] |> Company.changeset() |> PaperTrail.delete()
+    {:error, result} = insert_company_result[:model] |> Company.changeset() |> CustomPaperTrail.delete()
 
     assert Map.drop(result, [:repo_opts]) == Map.drop(ecto_result, [:repo_opts])
   end
@@ -288,21 +291,22 @@ defmodule PaperTrailStrictModeTest do
       })
 
     {:ok, result} =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: insert_company_result[:model].id
       })
-      |> PaperTrail.insert(origin: "admin", meta: %{linkname: "izelnakri"})
+      |> CustomPaperTrail.insert(origin: "admin", meta: %{linkname: "izelnakri"})
 
     person_count = Person.count()
     version_count = Version.count()
 
-    person = result[:model] |> serialize
-    version = result[:version] |> serialize
+    person = serialize(result[:model])
+    version = serialize(result[:version])
 
-    assert Map.keys(result) == [:model, :version]
+    assert Map.keys(result) == [:version, :model]
     assert person_count == 1
     assert version_count == 3
 
@@ -327,7 +331,7 @@ defmodule PaperTrailStrictModeTest do
              meta: %{linkname: "izelnakri"}
            }
 
-    assert person == first(Person, :id) |> @repo.one |> serialize
+    assert person == Person |> first(:id) |> @repo.one |> serialize()
   end
 
   test "updating a person creates a person version with correct attributes" do
@@ -345,30 +349,32 @@ defmodule PaperTrailStrictModeTest do
       })
 
     {:ok, insert_person_result} =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: target_company_insertion[:model].id
       })
-      |> PaperTrail.insert(origin: "admin")
+      |> CustomPaperTrail.insert(origin: "admin")
 
     {:ok, result} =
-      Person.changeset(insert_person_result[:model], %{
+      insert_person_result[:model]
+      |> Person.changeset(%{
         first_name: "Isaac",
         visit_count: 10,
         birthdate: ~D[1992-04-01],
         company_id: insert_company_result[:model].id
       })
-      |> PaperTrail.update(origin: "scraper", meta: %{linkname: "izelnakri"})
+      |> CustomPaperTrail.update(origin: "scraper", meta: %{linkname: "izelnakri"})
 
     person_count = Person.count()
     version_count = Version.count()
 
-    person = result[:model] |> serialize
-    version = result[:version] |> serialize
+    person = serialize(result[:model])
+    version = serialize(result[:version])
 
-    assert Map.keys(result) == [:model, :version]
+    assert Map.keys(result) == [:version, :model]
     assert person_count == 1
     assert version_count == 4
 
@@ -400,7 +406,7 @@ defmodule PaperTrailStrictModeTest do
              meta: %{linkname: "izelnakri"}
            }
 
-    assert person == first(Person, :id) |> @repo.one |> serialize
+    assert person == Person |> first(:id) |> @repo.one |> serialize()
   end
 
   test "deleting a person creates a person version with correct attributes" do
@@ -414,26 +420,28 @@ defmodule PaperTrailStrictModeTest do
       })
 
     {:ok, insert_person_result} =
-      Person.changeset(%Person{}, %{
+      %Person{}
+      |> Person.changeset(%{
         first_name: "Izel",
         last_name: "Nakri",
         gender: true,
         company_id: target_company_insertion[:model].id
       })
-      |> PaperTrail.insert(origin: "admin")
+      |> CustomPaperTrail.insert(origin: "admin")
 
     {:ok, update_person_result} =
-      Person.changeset(insert_person_result[:model], %{
+      insert_person_result[:model]
+      |> Person.changeset(%{
         first_name: "Isaac",
         visit_count: 10,
         birthdate: ~D[1992-04-01]
       })
-      |> PaperTrail.update(origin: "scraper", meta: %{linkname: "izelnakri"})
+      |> CustomPaperTrail.update(origin: "scraper", meta: %{linkname: "izelnakri"})
 
-    person_before_deletion = first(Person, :id) |> @repo.one |> serialize
+    person_before_deletion = Person |> first(:id) |> @repo.one |> serialize()
 
     {:ok, result} =
-      PaperTrail.delete(
+      CustomPaperTrail.delete(
         update_person_result[:model],
         origin: "admin",
         meta: %{linkname: "izelnakri"}
@@ -442,10 +450,10 @@ defmodule PaperTrailStrictModeTest do
     person_count = Person.count()
     version_count = Version.count()
 
-    old_person = result[:model] |> serialize
-    version = result[:version] |> serialize
+    old_person = serialize(result[:model])
+    version = serialize(result[:version])
 
-    assert Map.keys(result) == [:model, :version]
+    assert Map.keys(result) == [:version, :model]
     assert person_count == 0
     assert version_count == 5
 
@@ -475,15 +483,15 @@ defmodule PaperTrailStrictModeTest do
   end
 
   defp create_user do
-    User.changeset(%User{}, %{token: "fake-token", username: "izelnakri"}) |> @repo.insert!
+    %User{} |> User.changeset(%{token: "fake-token", username: "izelnakri"}) |> @repo.insert!
   end
 
   defp create_company_with_version(params \\ @create_company_params, options \\ []) do
-    Company.changeset(%Company{}, params) |> PaperTrail.insert(options)
+    %Company{} |> Company.changeset(params) |> CustomPaperTrail.insert(options)
   end
 
   defp update_company_with_version(company, params \\ @update_company_params, options \\ []) do
-    Company.changeset(company, params) |> PaperTrail.update(options)
+    company |> Company.changeset(params) |> CustomPaperTrail.update(options)
   end
 
   defp serialize(data), do: Serializer.serialize(data, repo: @repo)

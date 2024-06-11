@@ -1,22 +1,36 @@
 defmodule PaperTrailTest.UUIDTest do
-  use ExUnit.Case
-  import PaperTrail.RepoClient, only: [repo: 0]
-  alias PaperTrail.Version
+  use ExUnit.Case, async: false
+
   import Ecto.Query
+  import PaperTrail.RepoClient, only: [repo: 0]
+
+  alias PaperTrail.Version
+
+  defmodule CustomPaperTrail do
+    @moduledoc false
+    use PaperTrail,
+      repo: PaperTrail.UUIDRepo,
+      strict_mode: false,
+      originator_type: Ecto.UUID,
+      item_type: Ecto.UUID
+  end
 
   setup_all do
+    all_env = Application.get_all_env(:paper_trail)
+
     Application.put_env(:paper_trail, :repo, PaperTrail.UUIDRepo)
     Application.put_env(:paper_trail, :originator, name: :admin, model: Admin)
     Application.put_env(:paper_trail, :originator_type, Ecto.UUID)
-
-    Application.put_env(
-      :paper_trail,
-      :item_type,
-      if(System.get_env("STRING_TEST") == nil, do: Ecto.UUID, else: :string)
-    )
+    Application.put_env(:paper_trail, :item_type, Ecto.UUID)
 
     Code.eval_file("lib/paper_trail.ex")
     Code.eval_file("lib/version.ex")
+
+    on_exit(fn ->
+      Application.put_all_env(paper_trail: all_env)
+      Code.eval_file("lib/paper_trail.ex")
+      Code.eval_file("lib/version.ex")
+    end)
 
     repo().delete_all(Version)
     repo().delete_all(Admin)
@@ -30,9 +44,9 @@ defmodule PaperTrailTest.UUIDTest do
       product =
         %Product{}
         |> Product.changeset(%{name: "Hair Cream"})
-        |> PaperTrail.insert!()
+        |> CustomPaperTrail.insert!()
 
-      version = Version |> last |> repo().one
+      version = Version |> last() |> repo().one
 
       assert version.item_id == product.id
       assert version.item_type == "Product"
@@ -46,11 +60,11 @@ defmodule PaperTrailTest.UUIDTest do
 
       %Product{}
       |> Product.changeset(%{name: "Hair Cream"})
-      |> PaperTrail.insert!(originator: admin)
+      |> CustomPaperTrail.insert!(originator: admin)
 
       version =
         Version
-        |> last
+        |> last()
         |> repo().one
         |> repo().preload(:admin)
 
@@ -61,17 +75,17 @@ defmodule PaperTrailTest.UUIDTest do
       item =
         %Item{}
         |> Item.changeset(%{title: "hello"})
-        |> PaperTrail.insert!()
+        |> CustomPaperTrail.insert!()
 
-      version = Version |> last |> repo().one
+      version = Version |> last() |> repo().one
       assert version.item_id == item.item_id
 
       uuid_item =
         %UUIDItem{}
         |> UUIDItem.changeset(%{title: "hello"})
-        |> PaperTrail.insert!()
+        |> CustomPaperTrail.insert!()
 
-      version = Version |> last |> repo().one
+      version = Version |> last() |> repo().one
       assert version.item_id == uuid_item.item_id
     end
 
@@ -80,9 +94,9 @@ defmodule PaperTrailTest.UUIDTest do
         item =
           %FooItem{}
           |> FooItem.changeset(%{title: "hello"})
-          |> PaperTrail.insert!()
+          |> CustomPaperTrail.insert!()
 
-        version = Version |> last |> repo().one
+        version = Version |> last() |> repo().one
         assert version.item_id == "#{item.id}"
       end
     end
@@ -92,9 +106,9 @@ defmodule PaperTrailTest.UUIDTest do
         item =
           %BarItem{}
           |> BarItem.changeset(%{item_id: "#{:os.system_time()}", title: "hello"})
-          |> PaperTrail.insert!()
+          |> CustomPaperTrail.insert!()
 
-        version = Version |> last |> repo().one
+        version = Version |> last() |> repo().one
         assert version.item_id == item.item_id
       end
     end

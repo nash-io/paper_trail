@@ -1,4 +1,5 @@
 defmodule PaperTrail do
+  @moduledoc false
   import Ecto.Changeset
 
   alias Ecto.Changeset
@@ -189,44 +190,41 @@ defmodule PaperTrail do
     repo = RepoClient.repo(options)
     repo_options = Keyword.get(options, :repo_options, [])
 
-    repo.transaction(fn ->
-      case RepoClient.strict_mode(options) do
-        true ->
-          version_id = get_sequence_id("versions", options) + 1
+    fn ->
+      if RepoClient.strict_mode(options) do
+        version_id = get_sequence_id("versions", options) + 1
 
-          changeset_data =
-            Map.get(changeset, :data, changeset)
-            |> Map.merge(%{
-              id: get_sequence_from_model(changeset, options) + 1,
-              first_version_id: version_id,
-              current_version_id: version_id
-            })
+        changeset_data =
+          changeset
+          |> Map.get(:data, changeset)
+          |> Map.merge(%{
+            id: get_sequence_from_model(changeset, options) + 1,
+            first_version_id: version_id,
+            current_version_id: version_id
+          })
 
-          initial_version =
-            make_version_struct(%{event: "insert"}, changeset_data, options)
-            |> repo.insert!
+        initial_version =
+          %{event: "insert"}
+          |> make_version_struct(changeset_data, options)
+          |> repo.insert!
 
-          updated_changeset =
-            changeset
-            |> change(%{
-              first_version_id: initial_version.id,
-              current_version_id: initial_version.id
-            })
+        updated_changeset =
+          change(changeset, %{first_version_id: initial_version.id, current_version_id: initial_version.id})
 
-          model = repo.insert!(updated_changeset, repo_options)
+        model = repo.insert!(updated_changeset, repo_options)
 
-          target_version =
-            make_version_struct(%{event: "insert"}, model, options) |> serialize(options)
+        target_version =
+          %{event: "insert"} |> make_version_struct(model, options) |> serialize(options)
 
-          Version.changeset(initial_version, target_version) |> repo.update!
-          model
-
-        _ ->
-          model = repo.insert!(changeset, repo_options)
-          make_version_struct(%{event: "insert"}, model, options) |> repo.insert!
-          model
+        initial_version |> Version.changeset(target_version) |> repo.update!
+        model
+      else
+        model = repo.insert!(changeset, repo_options)
+        %{event: "insert"} |> make_version_struct(model, options) |> repo.insert!
+        model
       end
-    end)
+    end
+    |> repo.transaction()
     |> elem(1)
   end
 
@@ -248,37 +246,30 @@ defmodule PaperTrail do
     repo = RepoClient.repo(options)
     repo_options = Keyword.get(options, :repo_options, [])
 
-    repo.transaction(fn ->
-      case RepoClient.strict_mode(options) do
-        true ->
-          version_data =
-            changeset.data
-            |> Map.merge(%{
-              current_version_id: get_sequence_id("versions", options)
-            })
+    fn ->
+      if RepoClient.strict_mode(options) do
+        version_data =
+          Map.merge(changeset.data, %{current_version_id: get_sequence_id("versions", options)})
 
-          target_changeset = changeset |> Map.merge(%{data: version_data})
-          target_version = make_version_struct(%{event: "update"}, target_changeset, options)
-          initial_version = repo.insert!(target_version)
-          updated_changeset = changeset |> change(%{current_version_id: initial_version.id})
-          model = repo.update!(updated_changeset, repo_options)
+        target_changeset = Map.merge(changeset, %{data: version_data})
+        target_version = make_version_struct(%{event: "update"}, target_changeset, options)
+        initial_version = repo.insert!(target_version)
+        updated_changeset = change(changeset, %{current_version_id: initial_version.id})
+        model = repo.update!(updated_changeset, repo_options)
 
-          new_item_changes =
-            initial_version.item_changes
-            |> Map.merge(%{
-              current_version_id: initial_version.id
-            })
+        new_item_changes =
+          Map.merge(initial_version.item_changes, %{current_version_id: initial_version.id})
 
-          initial_version |> change(%{item_changes: new_item_changes}) |> repo.update!
-          model
-
-        _ ->
-          model = repo.update!(changeset, repo_options)
-          version_struct = make_version_struct(%{event: "update"}, changeset, options)
-          repo.insert!(version_struct)
-          model
+        initial_version |> change(%{item_changes: new_item_changes}) |> repo.update!
+        model
+      else
+        model = repo.update!(changeset, repo_options)
+        version_struct = make_version_struct(%{event: "update"}, changeset, options)
+        repo.insert!(version_struct)
+        model
       end
-    end)
+    end
+    |> repo.transaction()
     |> elem(1)
   end
 
@@ -311,12 +302,13 @@ defmodule PaperTrail do
     repo = RepoClient.repo(options)
     repo_options = Keyword.get(options, :repo_options, [])
 
-    repo.transaction(fn ->
+    fn ->
       model = repo.delete!(struct, repo_options)
       version_struct = make_version_struct(%{event: "delete"}, struct, options)
       repo.insert!(version_struct, options)
       model
-    end)
+    end
+    |> repo.transaction()
     |> elem(1)
   end
 end

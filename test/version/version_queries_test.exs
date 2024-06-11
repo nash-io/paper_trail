@@ -1,63 +1,69 @@
 defmodule PaperTrailTest.VersionQueries do
-  use ExUnit.Case
-
-  alias PaperTrail.Version
-  alias SimpleCompany, as: Company
-  alias SimplePerson, as: Person
-  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
-  alias PaperTrail.RepoClient
+  @moduledoc false
+  use ExUnit.Case, async: false
 
   import Ecto.Query
+
+  alias PaperTrail.RepoClient
+  alias PaperTrail.Version
+  alias PaperTrailTest.MultiTenantHelper, as: MultiTenant
+  alias SimpleCompany, as: Company
+  alias SimplePerson, as: Person
 
   defdelegate repo, to: RepoClient
 
   defmodule CustomPaperTrail do
+    @moduledoc false
     use PaperTrail,
       repo: PaperTrail.Repo,
-      strict_mode: false
+      strict_mode: false,
+      originator_type: :integer
   end
 
   setup_all do
-    Application.put_env(:paper_trail, :originator_type, :integer)
-    Code.eval_file("lib/version.ex")
     MultiTenant.setup_tenant(repo())
     reset_all_data()
 
-    Company.changeset(%Company{}, %{
+    %Company{}
+    |> Company.changeset(%{
       name: "Acme LLC",
       is_active: true,
       city: "Greenwich"
     })
     |> CustomPaperTrail.insert()
 
-    old_company = first(Company, :id) |> repo().one
+    old_company = Company |> first(:id) |> repo().one
 
-    Company.changeset(old_company, %{
+    old_company
+    |> Company.changeset(%{
       city: "Hong Kong",
       website: "http://www.acme.com",
       facebook: "acme.llc"
     })
     |> CustomPaperTrail.update()
 
-    first(Company, :id) |> repo().one |> CustomPaperTrail.delete()
+    Company |> first(:id) |> repo().one |> CustomPaperTrail.delete()
 
-    Company.changeset(%Company{}, %{
+    %Company{}
+    |> Company.changeset(%{
       name: "Acme LLC",
       website: "http://www.acme.com"
     })
     |> CustomPaperTrail.insert()
 
-    Company.changeset(%Company{}, %{
+    %Company{}
+    |> Company.changeset(%{
       name: "Another Company Corp.",
       is_active: true,
       address: "Sesame street 100/3, 101010"
     })
     |> CustomPaperTrail.insert()
 
-    company = first(Company, :id) |> repo().one
+    company = Company |> first(:id) |> repo().one
 
     # add link name later on
-    Person.changeset(%Person{}, %{
+    %Person{}
+    |> Person.changeset(%{
       first_name: "Izel",
       last_name: "Nakri",
       gender: true,
@@ -74,7 +80,10 @@ defmodule PaperTrailTest.VersionQueries do
         )
       )
 
-    Person.changeset(first(Person, :id) |> repo().one, %{
+    Person
+    |> first(:id)
+    |> repo().one
+    |> Person.changeset(%{
       first_name: "Isaac",
       visit_count: 10,
       birthdate: ~D[1992-04-01],
@@ -83,7 +92,8 @@ defmodule PaperTrailTest.VersionQueries do
     |> CustomPaperTrail.update(set_by: "user:1", meta: %{linkname: "izelnakri"})
 
     # Multi tenant
-    Company.changeset(%Company{}, %{
+    %Company{}
+    |> Company.changeset(%{
       name: "Acme LLC",
       is_active: true,
       city: "Greenwich"
@@ -92,11 +102,13 @@ defmodule PaperTrailTest.VersionQueries do
     |> CustomPaperTrail.insert(prefix: MultiTenant.tenant())
 
     company_multi =
-      first(Company, :id)
+      Company
+      |> first(:id)
       |> MultiTenant.add_prefix_to_query()
       |> repo().one
 
-    Person.changeset(%Person{}, %{
+    %Person{}
+    |> Person.changeset(%{
       first_name: "Izel",
       last_name: "Nakri",
       gender: true,
@@ -110,16 +122,18 @@ defmodule PaperTrailTest.VersionQueries do
 
   test "get_version gives us the right version" do
     tenant = MultiTenant.tenant()
-    last_person = last(Person, :id) |> repo().one
-    target_version = last(Version, :id) |> repo().one
+    last_person = Person |> last(:id) |> repo().one
+    target_version = Version |> last(:id) |> repo().one
 
     last_person_multi =
-      last(Person, :id)
+      Person
+      |> last(:id)
       |> MultiTenant.add_prefix_to_query()
       |> repo().one
 
     target_version_multi =
-      last(Version, :id)
+      Version
+      |> last(:id)
       |> MultiTenant.add_prefix_to_query()
       |> repo().one
 
@@ -135,7 +149,7 @@ defmodule PaperTrailTest.VersionQueries do
 
   test "get_versions gives us the right versions" do
     tenant = MultiTenant.tenant()
-    last_person = last(Person, :id) |> repo().one
+    last_person = Person |> last(:id) |> repo().one
 
     target_versions =
       repo().all(
@@ -146,7 +160,8 @@ defmodule PaperTrailTest.VersionQueries do
       )
 
     last_person_multi =
-      last(Person, :id)
+      Person
+      |> last(:id)
       |> MultiTenant.add_prefix_to_query()
       |> repo().one
 
@@ -171,12 +186,12 @@ defmodule PaperTrailTest.VersionQueries do
   end
 
   test "get_current_model/1 gives us the current record of a version" do
-    person = first(Person, :id) |> repo().one
+    person = Person |> first(:id) |> repo().one
 
     first_version =
       Version
       |> where([v], v.item_type == "SimplePerson" and v.item_id == ^person.id)
-      |> first
+      |> first()
       |> repo().one
 
     assert CustomPaperTrail.get_current_model(first_version) == person
@@ -185,7 +200,7 @@ defmodule PaperTrailTest.VersionQueries do
   # query meta data!!
 
   # Functions
-  defp reset_all_data() do
+  defp reset_all_data do
     repo().delete_all(Person)
     repo().delete_all(Company)
     repo().delete_all(Version)

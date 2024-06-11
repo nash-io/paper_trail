@@ -1,5 +1,7 @@
 defmodule PaperTrail.VersionQueries do
+  @moduledoc false
   import Ecto.Query
+
   alias PaperTrail.Version
 
   @doc """
@@ -7,13 +9,6 @@ defmodule PaperTrail.VersionQueries do
   """
   @spec get_versions(record :: Ecto.Schema.t()) :: Ecto.Query.t()
   def get_versions(record), do: get_versions(record, [])
-
-  @doc """
-  Gets all the versions of a record given a module and its id
-  """
-  @spec get_versions(model :: module, id :: any) :: Ecto.Query.t()
-  def get_versions(model, id) when is_atom(model) and not is_list(id),
-    do: get_versions(model, id, [])
 
   @doc """
   Gets all the versions of a record.
@@ -25,11 +20,14 @@ defmodule PaperTrail.VersionQueries do
 
     iex(1)> PaperTrail.VersionQueries.get_versions(record, [prefix: "tenant_id"])
   """
-  @spec get_versions(record :: Ecto.Schema.t(), options :: keyword) :: Ecto.Query.t()
+  @spec get_versions(module | Ecto.Schema.t(), any | keyword) :: Ecto.Query.t()
+  def get_versions(model, id) when is_atom(model) and not is_list(id), do: get_versions(model, id, [])
+
   def get_versions(record, options) when is_map(record) and is_list(options) do
     item_type = record.__struct__ |> Module.split() |> List.last()
 
-    version_query(item_type, PaperTrail.get_model_id(record), options)
+    item_type
+    |> version_query(PaperTrail.get_model_id(record), options)
     |> PaperTrail.RepoClient.repo(options).all
   end
 
@@ -46,7 +44,7 @@ defmodule PaperTrail.VersionQueries do
   @spec get_versions(model :: module, id :: any, options :: keyword) :: Ecto.Query.t()
   def get_versions(model, id, options) do
     item_type = model |> Module.split() |> List.last()
-    version_query(item_type, id, options) |> PaperTrail.RepoClient.repo(options).all
+    item_type |> version_query(id, options) |> PaperTrail.RepoClient.repo(options).all
   end
 
   @doc """
@@ -56,14 +54,8 @@ defmodule PaperTrail.VersionQueries do
   def get_version(record), do: get_version(record, [])
 
   @doc """
-  Gets the last version of a record given its module reference and its id.
-  """
-  @spec get_version(model :: module, id :: any) :: Ecto.Query.t()
-  def get_version(model, id) when is_atom(model) and not is_list(id),
-    do: get_version(model, id, [])
-
-  @doc """
   Gets the last version of a record.
+
 
   A list of options is optional, so you can set for example the :prefix of the query,
   wich allows you to change between different tenants.
@@ -72,11 +64,15 @@ defmodule PaperTrail.VersionQueries do
 
     iex(1)> PaperTrail.VersionQueries.get_version(record, [prefix: "tenant_id"])
   """
-  @spec get_version(record :: Ecto.Schema.t(), options :: keyword) :: Ecto.Query.t()
+  @spec get_version(module | Ecto.Schema.t(), any | keyword) :: Ecto.Query.t()
+  def get_version(model, id) when is_atom(model) and not is_list(id), do: get_version(model, id, [])
+
   def get_version(record, options) when is_map(record) do
     item_type = record.__struct__ |> Module.split() |> List.last()
 
-    last(version_query(item_type, PaperTrail.get_model_id(record), options))
+    item_type
+    |> version_query(PaperTrail.get_model_id(record), options)
+    |> last()
     |> PaperTrail.RepoClient.repo(options).one
   end
 
@@ -93,7 +89,7 @@ defmodule PaperTrail.VersionQueries do
   @spec get_version(model :: module, id :: any, options :: keyword) :: Ecto.Query.t()
   def get_version(model, id, options) do
     item_type = model |> Module.split() |> List.last()
-    last(version_query(item_type, id, options)) |> PaperTrail.RepoClient.repo(options).one
+    item_type |> version_query(id, options) |> last() |> PaperTrail.RepoClient.repo(options).one
   end
 
   @doc """
@@ -101,7 +97,7 @@ defmodule PaperTrail.VersionQueries do
   """
   def get_current_model(version, options \\ []) do
     PaperTrail.RepoClient.repo(options).get(
-      ("Elixir." <> version.item_type) |> String.to_existing_atom(),
+      String.to_existing_atom("Elixir." <> version.item_type),
       version.item_id
     )
   end
@@ -111,8 +107,9 @@ defmodule PaperTrail.VersionQueries do
   end
 
   defp version_query(item_type, id, options) do
-    with opts <- Enum.into(options, %{}) do
-      version_query(item_type, id)
+    with opts <- Map.new(options) do
+      item_type
+      |> version_query(id)
       |> Ecto.Queryable.to_query()
       |> Map.merge(opts)
     end
