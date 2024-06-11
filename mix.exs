@@ -50,8 +50,7 @@ defmodule PaperTrail.Mixfile do
       name: :paper_trail_nash,
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Rafael Scheffer"],
-      licenses: ["MIT License"],
-      organization: "neonexchange",
+      licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/nash-io/paper_trail",
         "Docs" => "https://hexdocs.pm/paper_trail_nash/PaperTrail.html"

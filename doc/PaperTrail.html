@@ -134,31 +134,31 @@ Pages
 
 
     <section id="moduledoc">
-<p>Provide functions to insert, update and delete records on the database alongside their changes.</p><h1>Usage:</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.PaperTrail</span><span class="w"> </span><span class="k" data-group-id="4560312094-1">do</span><span class="w">
+<p>Provide functions to insert, update and delete records on the database alongside their changes.</p><h1>Usage:</h1><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.PaperTrail</span><span class="w"> </span><span class="k" data-group-id="8172180969-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">PaperTrail</span><span class="p">,</span><span class="w">
     </span><span class="ss">repo</span><span class="p">:</span><span class="w"> </span><span class="nc">MyApp.Repo</span><span class="p">,</span><span class="w">
     </span><span class="ss">originator_type</span><span class="p">:</span><span class="w"> </span><span class="nc">Ecto.UUID</span><span class="p">,</span><span class="w">
     </span><span class="ss">item_type</span><span class="p">:</span><span class="w"> </span><span class="nc">Ecto.UUID</span><span class="w">
-</span><span class="k" data-group-id="4560312094-1">end</span><span class="w">
+</span><span class="k" data-group-id="8172180969-1">end</span><span class="w">
 
-</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.Context</span><span class="w"> </span><span class="k" data-group-id="4560312094-2">do</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">create_user</span><span class="p" data-group-id="4560312094-3">(</span><span class="n">params</span><span class="p" data-group-id="4560312094-3">)</span><span class="w"> </span><span class="k" data-group-id="4560312094-4">do</span><span class="w">
-    </span><span class="n">changeset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MyApp.User</span><span class="o">.</span><span class="n">create_changeset</span><span class="p" data-group-id="4560312094-5">(</span><span class="n">params</span><span class="p" data-group-id="4560312094-5">)</span><span class="w">
+</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.Context</span><span class="w"> </span><span class="k" data-group-id="8172180969-2">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">create_user</span><span class="p" data-group-id="8172180969-3">(</span><span class="n">params</span><span class="p" data-group-id="8172180969-3">)</span><span class="w"> </span><span class="k" data-group-id="8172180969-4">do</span><span class="w">
+    </span><span class="n">changeset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MyApp.User</span><span class="o">.</span><span class="n">create_changeset</span><span class="p" data-group-id="8172180969-5">(</span><span class="n">params</span><span class="p" data-group-id="8172180969-5">)</span><span class="w">
     </span><span class="c1"># A `PaperTrail.Version` record with event `insert` is inserted</span><span class="w">
-    </span><span class="nc">MyApp.PaperTrail</span><span class="o">.</span><span class="n">insert</span><span class="p" data-group-id="4560312094-6">(</span><span class="n">changeset</span><span class="p" data-group-id="4560312094-6">)</span><span class="w">
-  </span><span class="k" data-group-id="4560312094-4">end</span><span class="w">
+    </span><span class="nc">MyApp.PaperTrail</span><span class="o">.</span><span class="n">insert</span><span class="p" data-group-id="8172180969-6">(</span><span class="n">changeset</span><span class="p" data-group-id="8172180969-6">)</span><span class="w">
+  </span><span class="k" data-group-id="8172180969-4">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update_user</span><span class="p" data-group-id="4560312094-7">(</span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p" data-group-id="4560312094-7">)</span><span class="w"> </span><span class="k" data-group-id="4560312094-8">do</span><span class="w">
-    </span><span class="n">changeset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MyApp.User</span><span class="o">.</span><span class="n">update_changeset</span><span class="p" data-group-id="4560312094-9">(</span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p" data-group-id="4560312094-9">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update_user</span><span class="p" data-group-id="8172180969-7">(</span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p" data-group-id="8172180969-7">)</span><span class="w"> </span><span class="k" data-group-id="8172180969-8">do</span><span class="w">
+    </span><span class="n">changeset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MyApp.User</span><span class="o">.</span><span class="n">update_changeset</span><span class="p" data-group-id="8172180969-9">(</span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p" data-group-id="8172180969-9">)</span><span class="w">
     </span><span class="c1"># A `PaperTrail.Version` record with event `update` is inserted</span><span class="w">
-    </span><span class="nc">MyApp.PaperTrail</span><span class="o">.</span><span class="n">update</span><span class="p" data-group-id="4560312094-10">(</span><span class="n">changeset</span><span class="p" data-group-id="4560312094-10">)</span><span class="w">
-  </span><span class="k" data-group-id="4560312094-8">end</span><span class="w">
+    </span><span class="nc">MyApp.PaperTrail</span><span class="o">.</span><span class="n">update</span><span class="p" data-group-id="8172180969-10">(</span><span class="n">changeset</span><span class="p" data-group-id="8172180969-10">)</span><span class="w">
+  </span><span class="k" data-group-id="8172180969-8">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">delete_user</span><span class="p" data-group-id="4560312094-11">(</span><span class="n">user</span><span class="p" data-group-id="4560312094-11">)</span><span class="w"> </span><span class="k" data-group-id="4560312094-12">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">delete_user</span><span class="p" data-group-id="8172180969-11">(</span><span class="n">user</span><span class="p" data-group-id="8172180969-11">)</span><span class="w"> </span><span class="k" data-group-id="8172180969-12">do</span><span class="w">
     </span><span class="c1"># A `PaperTrail.Version` record with event `delete` is inserted</span><span class="w">
-    </span><span class="nc">MyApp.PaperTrail</span><span class="o">.</span><span class="n">delete</span><span class="p" data-group-id="4560312094-13">(</span><span class="n">user</span><span class="p" data-group-id="4560312094-13">)</span><span class="w">
-  </span><span class="k" data-group-id="4560312094-12">end</span><span class="w">
-</span><span class="k" data-group-id="4560312094-2">end</span></code></pre>
+    </span><span class="nc">MyApp.PaperTrail</span><span class="o">.</span><span class="n">delete</span><span class="p" data-group-id="8172180969-13">(</span><span class="n">user</span><span class="p" data-group-id="8172180969-13">)</span><span class="w">
+  </span><span class="k" data-group-id="8172180969-12">end</span><span class="w">
+</span><span class="k" data-group-id="8172180969-2">end</span></code></pre>
     </section>
 
 </div>
