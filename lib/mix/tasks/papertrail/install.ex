@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Papertrail.Install do
-  @shortdoc "generates paper_trail migration file for your database"
+  @moduledoc "generates paper_trail migration file for your database"
 
   use Mix.Task
 

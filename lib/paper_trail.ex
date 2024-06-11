@@ -1,5 +1,36 @@
 defmodule PaperTrail do
-  @moduledoc false
+  @moduledoc """
+  Provide functions to insert, update and delete records on the database alongside their changes.
+
+  # Usage:
+
+  ```
+  defmodule MyApp.PaperTrail do
+    use PaperTrail,
+      repo: MyApp.Repo,
+      originator_type: Ecto.UUID,
+      item_type: Ecto.UUID
+  end
+
+  defmodule MyApp.Context do
+    def create_user(params) do
+      changeset = MyApp.User.create_changeset(params)
+      # A `PaperTrail.Version` record with event `insert` is inserted
+      MyApp.PaperTrail.insert(changeset)
+    end
+
+    def update_user(user, params) do
+      changeset = MyApp.User.update_changeset(user, params)
+      # A `PaperTrail.Version` record with event `update` is inserted
+      MyApp.PaperTrail.update(changeset)
+    end
+
+    def delete_user(user) do
+      # A `PaperTrail.Version` record with event `delete` is inserted
+      MyApp.PaperTrail.delete(user)
+    end
+  end
+  """
   import Ecto.Changeset
 
   alias Ecto.Changeset

@@ -8,7 +8,6 @@ defmodule PaperTrail.Mixfile do
       elixir: "~> 1.15",
       source_url: "https://github.com/nash-io/paper_trail",
       description: description(),
-      build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
@@ -25,7 +24,7 @@ defmodule PaperTrail.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      applications: [:logger, :ecto, :ecto_sql, :runtime_tools]
+      extra_applications: [:logger, :ecto, :ecto_sql, :runtime_tools]
     ]
   end
 
@@ -33,7 +32,7 @@ defmodule PaperTrail.Mixfile do
     [
       {:ecto, ">= 3.10.0"},
       {:ecto_sql, ">= 3.10.0"},
-      {:ex_doc, ">= 0.21.3"},
+      {:ex_doc, "~> 0.31"},
       {:postgrex, ">= 0.0.0", only: [:dev, :test]},
       {:jason, ">= 1.2.0", only: [:dev, :test]},
       {:dialyxir, "~> 1.0", runtime: false, only: [:dev, :test]}

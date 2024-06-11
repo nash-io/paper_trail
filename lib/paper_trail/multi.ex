@@ -1,5 +1,5 @@
 defmodule PaperTrail.Multi do
-  @moduledoc false
+  @moduledoc "Provide functions compatible with `Ecto.Multi` to insert, update and delete records on the database alongside their changes."
   import Ecto.Changeset
 
   alias Ecto.Changeset

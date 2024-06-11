@@ -1,5 +1,5 @@
 defmodule PaperTrail.Version do
-  @moduledoc false
+  @moduledoc "Ecto schema that represents a version of a record at a point of time."
   use Ecto.Schema
 
   import Ecto.Changeset
