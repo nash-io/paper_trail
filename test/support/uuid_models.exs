@@ -1,4 +1,5 @@
 defmodule Product do
+  @moduledoc false
   use Ecto.Schema
 
   import Ecto.Changeset
@@ -18,7 +19,9 @@ defmodule Product do
 end
 
 defmodule Admin do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -36,7 +39,9 @@ defmodule Admin do
 end
 
 defmodule Item do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @primary_key {:item_id, :binary_id, autogenerate: true}
@@ -54,7 +59,9 @@ defmodule Item do
 end
 
 defmodule UUIDItem do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @primary_key {:item_id, Ecto.UUID, autogenerate: true}
@@ -72,7 +79,9 @@ defmodule UUIDItem do
 end
 
 defmodule FooItem do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @primary_key {:id, :id, autogenerate: true}
@@ -90,7 +99,9 @@ defmodule FooItem do
 end
 
 defmodule BarItem do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @primary_key {:item_id, :string, autogenerate: false}
@@ -104,5 +115,26 @@ defmodule BarItem do
     model
     |> cast(params, [:item_id, :title])
     |> validate_required([:item_id, :title])
+  end
+end
+
+defmodule CompositePkItem do
+  @moduledoc false
+  use Ecto.Schema
+
+  import Ecto.Changeset
+
+  @primary_key false
+  schema "composite_primary_keys_items" do
+    field(:item_id, Ecto.UUID, primary_key: true)
+    field(:bar_id, Ecto.UUID, primary_key: true)
+
+    timestamps()
+  end
+
+  def changeset(model, params \\ %{}) do
+    model
+    |> cast(params, [:item_id, :bar_id])
+    |> validate_required([:item_id, :bar_id])
   end
 end

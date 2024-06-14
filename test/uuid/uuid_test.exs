@@ -4,6 +4,7 @@ defmodule PaperTrailTest.UUIDTest do
   import Ecto.Query
   import PaperTrail.RepoClient, only: [repo: 0]
 
+  alias Ecto.UUID
   alias PaperTrail.Version
 
   defmodule CustomPaperTrail do
@@ -84,6 +85,50 @@ defmodule PaperTrailTest.UUIDTest do
 
       version = Version |> last() |> repo().one
       assert version.item_id == uuid_item.item_id
+    end
+
+    test "versioning models with composite primary keys" do
+      item_id1 = UUID.generate()
+      bar_id1 = UUID.generate()
+
+      item1 =
+        %CompositePkItem{}
+        |> CompositePkItem.changeset(%{item_id: item_id1, bar_id: bar_id1})
+        |> CustomPaperTrail.insert!()
+
+      version1 = Version |> last() |> repo().one
+
+      assert version1 == PaperTrail.get_version(item1)
+
+      assert %{
+               event: "insert",
+               item_changes: %{"bar_id" => ^bar_id1, "item_id" => ^item_id1},
+               item_id: version_id1,
+               item_type: "CompositePkItem"
+             } = version1
+
+      assert match?({:ok, _}, UUID.cast(version_id1))
+
+      item_id2 = UUID.generate()
+      bar_id2 = UUID.generate()
+
+      item2 =
+        %CompositePkItem{}
+        |> CompositePkItem.changeset(%{item_id: item_id2, bar_id: bar_id2})
+        |> CustomPaperTrail.insert!()
+
+      version2 = PaperTrail.get_version(item2)
+
+      assert %{
+               event: "insert",
+               item_changes: %{"bar_id" => ^bar_id2, "item_id" => ^item_id2},
+               item_id: version_id2,
+               item_type: "CompositePkItem"
+             } = version2
+
+      assert match?({:ok, _}, UUID.cast(version_id2))
+
+      assert version_id1 != version_id2
     end
 
     test "test INTEGER primary key for item_type == :string" do
