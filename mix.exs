@@ -4,7 +4,7 @@ defmodule PaperTrail.Mixfile do
   def project do
     [
       app: :paper_trail,
-      version: "0.11.0",
+      version: "0.12.0",
       elixir: "~> 1.15",
       source_url: "https://github.com/nash-io/paper_trail",
       description: description(),

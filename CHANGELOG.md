@@ -1,3 +1,6 @@
+### v0.12.0 - June 14th, 2024:
+- Fix item_id for composite primary keys
+
 ### v0.11.0 - June 11th, 2024:
 - Support serialization of list of embeds
 - Update Ecto and EctoSql to 3.11.2
