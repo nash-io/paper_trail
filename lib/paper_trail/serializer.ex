@@ -2,12 +2,13 @@ defmodule PaperTrail.Serializer do
   @moduledoc false
   import Ecto.Query
 
+  alias Ecto.UUID
   alias PaperTrail.RepoClient
   alias PaperTrail.Version
 
   @type options :: PaperTrail.options()
 
-  @default_ignored_ecto_types [Ecto.UUID, :binary_id, :binary]
+  @default_ignored_ecto_types [UUID, :binary_id, :binary]
 
   def make_version_struct(%{event: "insert"}, model, options) do
     originator = RepoClient.originator()
@@ -221,17 +222,37 @@ defmodule PaperTrail.Serializer do
   def get_item_type(%Ecto.Changeset{data: data}), do: get_item_type(data)
   def get_item_type(%schema{}), do: schema |> Module.split() |> List.last()
 
+  @spec get_model_id(Ecto.Changeset.t() | struct()) :: String.t() | integer()
   def get_model_id(%Ecto.Changeset{data: data}), do: get_model_id(data)
 
   def get_model_id(model) do
-    {_, model_id} = List.first(Ecto.primary_key(model))
+    model_id =
+      case Ecto.primary_key(model) do
+        [{_, model_id}] ->
+          model_id
+
+        composite_primary_keys ->
+          composite_primary_keys
+          |> Enum.sort_by(fn {field, _value} -> field end, :asc)
+          |> Enum.map_join(":", fn {_field, value} -> to_string(value) end)
+      end
 
     case PaperTrail.Version.__schema__(:type, :item_id) do
       :integer ->
         model_id
 
-      _ ->
-        "#{model_id}"
+      UUID ->
+        if UUID.cast(model_id) == :error do
+          model_id
+          |> then(&:crypto.hash(:sha256, &1))
+          |> :binary.part(0, 16)
+          |> UUID.cast!()
+        else
+          model_id
+        end
+
+      _else ->
+        to_string(model_id)
     end
   end
 
