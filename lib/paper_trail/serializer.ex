@@ -9,6 +9,7 @@ defmodule PaperTrail.Serializer do
   @type options :: PaperTrail.options()
 
   @default_ignored_ecto_types [UUID, :binary_id, :binary]
+  @originator_type Application.compile_env(:paper_trail, :originator_type, :integer)
 
   def make_version_struct(%{event: "insert"}, model, options) do
     originator = RepoClient.originator()
@@ -97,7 +98,7 @@ defmodule PaperTrail.Serializer do
           item_type: type(^item_type, :string),
           item_id: field(q, ^primary_key),
           item_changes: type(^changes_map, :map),
-          originator_id: type(^originator_id, :string),
+          originator_id: type(^originator_id, ^@originator_type),
           origin: type(^origin, :string),
           meta: type(^meta, :map),
           inserted_at: type(fragment("CURRENT_TIMESTAMP"), :naive_datetime)
