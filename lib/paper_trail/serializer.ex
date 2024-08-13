@@ -186,7 +186,7 @@ defmodule PaperTrail.Serializer do
 
   defp dump_field!({field, value}, schema, adapter, _options, _event) do
     dumper = schema.__schema__(:dump)
-    {alias, type} = Map.fetch!(dumper, field)
+    {alias, type, _} = Map.fetch!(dumper, field)
 
     dumped_value =
       cond do
